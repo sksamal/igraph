@@ -1,0 +1,6 @@
+f2c/libf2c_la-ctype.lo: f2c/ctype.c /usr/include/stdc-predef.h \
+ f2c/ctype.h
+
+/usr/include/stdc-predef.h:
+
+f2c/ctype.h:

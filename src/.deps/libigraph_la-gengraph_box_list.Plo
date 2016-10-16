@@ -1,0 +1,34 @@
+libigraph_la-gengraph_box_list.lo: gengraph_box_list.cpp \
+ /usr/include/stdc-predef.h gengraph_box_list.h \
+ /usr/include/c++/6.1.1/cassert \
+ /usr/include/c++/6.1.1/x86_64-redhat-linux/bits/c++config.h \
+ /usr/include/bits/wordsize.h \
+ /usr/include/c++/6.1.1/x86_64-redhat-linux/bits/os_defines.h \
+ /usr/include/features.h /usr/include/sys/cdefs.h \
+ /usr/include/gnu/stubs.h /usr/include/gnu/stubs-64.h \
+ /usr/include/c++/6.1.1/x86_64-redhat-linux/bits/cpu_defines.h \
+ /usr/include/assert.h
+
+/usr/include/stdc-predef.h:
+
+gengraph_box_list.h:
+
+/usr/include/c++/6.1.1/cassert:
+
+/usr/include/c++/6.1.1/x86_64-redhat-linux/bits/c++config.h:
+
+/usr/include/bits/wordsize.h:
+
+/usr/include/c++/6.1.1/x86_64-redhat-linux/bits/os_defines.h:
+
+/usr/include/features.h:
+
+/usr/include/sys/cdefs.h:
+
+/usr/include/gnu/stubs.h:
+
+/usr/include/gnu/stubs-64.h:
+
+/usr/include/c++/6.1.1/x86_64-redhat-linux/bits/cpu_defines.h:
+
+/usr/include/assert.h:
