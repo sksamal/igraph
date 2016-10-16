@@ -1,0 +1,38 @@
+############################################################################
+##                                                                        ##
+##   Makefile for Algorithm                                               ##
+##   version 1.0                                                          ##
+############################################################################
+
+.DEFAULT : all
+INC=-I/home/ssamal/Downloads/igraph/include -I/home/ssamal/Downloads/igraph/src
+LIBS=-L/home/ssamal/Downloads/igraph/src/.libs/
+LXX=-ligraph
+CXX=g++
+CC=gcc
+CXXFLAGS=-g
+CFLAGS=-g
+OBJ_DIR=.
+SRC_DIR=.
+
+all : 
+	for file in *.c ; do \
+	make `basename $$file .c`; \
+done
+
+%: %.cpp
+	$(CXX) $(INC) $(LIBS) $(CXXFLAGS) $(LXX) -o $(OBJ_DIR)/$@ $(SRC_DIR)/$@.cpp
+
+%: %.c
+	$(CC) $(INC) $(LIBS) $(CFLAGS) $(LXX) -o $(OBJ_DIR)/$@ $(SRC_DIR)/$@.c
+clean: 
+	rm -rf $(OBJ_DIR)/*.o
+
+runat: igraph_atfree
+	for a in `seq 1 20`; do \
+	sleep 3; \
+	./igraph_atfree > aa$$a.dot ;\
+	dot -Kfdp -n aa$$a.dot -Tpdf > aa$$a.pdf; \
+done
+	pdfunite aa*.pdf caa.pdf; \
+	rm -f aa*.dot aa*.pdf; \
