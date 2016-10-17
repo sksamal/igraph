@@ -1,23 +1,5 @@
 /* -*- mode: C -*-  */
 /* 
-   IGraph library.
-   Copyright (C) 2006-2012  Gabor Csardi <csardi.gabor@gmail.com>
-   334 Harvard st, Cambridge MA, 02139 USA
-   
-   This program is free software; you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation; either version 2 of the License, or
-   (at your option) any later version.
-   
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-   
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc.,  51 Franklin Street, Fifth Floor, Boston, MA 
-   02110-1301 USA
 
 */
 
@@ -35,15 +17,15 @@ int main() {
   igraph_i_set_attribute_table(&igraph_cattribute_table);
 
   // l = number of levels, s = max size of each level (>=2)
-  int l=rand()%7+3,s=rand()%7+3;  
+  int conns=3;
+  int l=rand()%7+conns,s=rand()%7+conns;  
   int loc[l];    // store start
   double scale=0.4;
   int count=0;
-  int conns=4;
 
 
   for(int i=0;i<l;i++) {
-	count+= (rand()%(s-2)+2);
+	count+= (s>conns)?(rand()%(s-conns)+conns):conns;
 	loc[i] = count;
 //	printf("%d ",loc[i]);
   }	
@@ -51,42 +33,41 @@ int main() {
   /* empty directed graph, zero vertices */
   igraph_empty(&g, count, IGRAPH_UNDIRECTED);
 
+  igraph_vector_t neighs;
+  igraph_vector_init(&neighs,8);
+  igraph_bool_t connected;
   for(int i=0;i<l;i++) {
     int p = (i<=1)?0:loc[i-2];
     int c = (i>0)?loc[i-1]:0;
     int n = loc[i];
     for (int j=c;j<n;j++)  { /* Vertices in level i */ 
-	int rb1=-1,rb2=-1,rf1=-1,rf2=-1 ;
 
-     int cs = conns;
-     while(1) {
-    	if(i!=0) { 
-		do { rb1 = rand()%(loc[i-1]-p); } while(rb2==rb1);
-		igraph_add_edge(&g,j,p+rb1);
+     igraph_neighbors(&g,&neighs,j,IGRAPH_ALL);
+     int cs = igraph_vector_size(&neighs); 
+     while(cs<conns) {
+
+	int dir=0;
+    	if((i!=0) && (i==l-1 || dir==0)) { 
+		int rb = rand()%(loc[i-1]-p); 
+		igraph_are_connected(&g,j, p+rb,&connected);
+//		printf("Back: i=%d,cs=%d,isconn=%d,rb=%d,size=%d\n",i, cs, connected,rb,loc[i-1]-p);
+		if(!connected)
+		     { igraph_add_edge(&g,j,p+rb); dir=1; cs++; }
 		}
-	else 	{
-		do { rf1 = rand()%(loc[i+1]-n); } while(rf2==rf1);
-		igraph_add_edge(&g,j,n+rf1); 
+	if((i!=l-1) && (i==0 || dir==1)) 	{
+		int rf = rand()%(loc[i+1]-n); 
+		igraph_are_connected(&g,j, n+rf,&connected);
+//		printf("Forward: i=%d,cs=%d,isconn=%d,rb=%d,size=%d\n",i, cs, connected,rf,loc[i+1]-n);
+		if(!connected)
+		   { igraph_add_edge(&g,j,n+rf); dir=0; cs++; } 
 		}
-	if(!--cs>0) break;
-    	if(i!=l-1) {
-		do { rf2 = rand()%(loc[i+1]-n); } while(rf2==rf1);
-		igraph_add_edge(&g,j,n+rf2);
-		}
-	else 	{
-		do { rb2 = rand()%(loc[i-1]-p); } while(rb2==rb1);
-		igraph_add_edge(&g,j,p+rb2);
-		}
-	if(!--cs>0) break;
-//    	if(i!=0) igraph_add_edge(&g,j,p+rand()%(loc[i-1]-p));
-//	else igraph_add_edge(&g,j,n+rand()%(loc[i+1]-n)); 
-//    	if(i!=l-1) igraph_add_edge(&g,j,n+rand()%(loc[i+1]-n));
-//	else igraph_add_edge(&g,j,p+rand()%(loc[i-1]-p));
 
 	int t=rand()%(3*(n-c));
-	if(t < (n-c))
-	  igraph_add_edge(&g,j,c+t);
-	if(!--cs>0) break;
+	if((cs>1) && (t < (n-c))) {
+            igraph_are_connected(&g,j, c+t,&connected);
+	    if(!connected)
+	      { igraph_add_edge(&g,j,c+t); cs++; } 
+	}
     }	
   }
   }

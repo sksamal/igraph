@@ -25,10 +25,15 @@ done
 
 %: %.c
 	$(CC) $(INC) $(LIBS) $(CFLAGS) $(LXX) -o $(OBJ_DIR)/$@ $(SRC_DIR)/$@.c
-clean: 
+cleanat : 
 	rm -rf $(OBJ_DIR)/*.o
+	rm -rf $(OBJ_DIR)/igraph_atfree
+clean :  
+	for file in *.c ; do \
+	rm -rf `basename $$file .c`; \
+done
 
-runat: igraph_atfree
+runat : igraph_atfree
 	for a in `seq 1 20`; do \
 	sleep 3; \
 	./igraph_atfree > aa$$a.dot ;\
