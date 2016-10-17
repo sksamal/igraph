@@ -5,6 +5,7 @@
 
 #include <igraph.h>
 
+void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
 int main() {
   
   igraph_t g;
@@ -78,7 +79,30 @@ int main() {
      igraph_neighbors(&g,neighs,i,0);
      igraph_vector_size(neighs); 
    } */
-	 
+
+  igraph_vector_t left,current, right;
+  for(int j=0; j<loc[l-1];j++)
+   {
+      igraph_vector_init(&left,1);
+      igraph_vector_init(&current,1);
+      igraph_vector_init(&right,1);
+      cutNeighbors(&g,j,loc,&left,&current,&right);
+      printf("\n j=%d: L=( ",j);
+      for(int i=0;i<igraph_vector_size(&left)-1;i++)
+ 	printf("%d ",(int) VECTOR(left)[i]);	
+      printf(") C=( ");
+      for(int i=0;i<igraph_vector_size(&current)-1;i++)
+ 	printf("%d ",(int) VECTOR(current)[i]);	
+      printf(") R=( ");
+      for(int i=0;i<igraph_vector_size(&right)-1;i++)
+ 	printf("%d ",(int) VECTOR(right)[i]);	
+      printf(")");
+//      printf("\n\t\t j=%d : left=%d curr=%d right=%d",j, igraph_vector_size(&left),igraph_vector_size(&current),igraph_vector_size(&right));
+  igraph_vector_destroy(&left);
+  igraph_vector_destroy(&current);
+  igraph_vector_destroy(&right);
+   }
+
   SETGAS(&g, "name", "AT-Free graph");
   SETGAN(&g, "vertices", igraph_vcount(&g));
   SETGAN(&g, "edges", igraph_ecount(&g));
@@ -93,22 +117,52 @@ int main() {
   sprintf(spos,"%f,%f!",i*scale,(j-o+low)*scale);
   SETVAS(&g, "pos",j,spos);
   SETVAS(&g, "shape",j,"point");
+  SETVAN(&g, "fontsize",j,6);
+  SETVAN(&g, "xlabel",j,j);
 }
 }
-  /* Add edges 
-  igraph_vector_init(&v, 4);
-  VECTOR(v)[0]=2; VECTOR(v)[1]=1;
-  VECTOR(v)[2]=3; VECTOR(v)[3]=3;
-  igraph_add_edges(&g, &v, 0);
-
-  if (igraph_vcount(&g) != 0) {
-    return 1;
-  }
-  if (igraph_ecount(&g) != 0) {
-    return 2;
-  } */
 //  igraph_write_graph_graphml(&g, stdout, /*prefixattr=*/ 1);
-  igraph_write_graph_dot(&g, stdout);
+  FILE *fp = fopen("aa.dot","w");
+  igraph_write_graph_dot(&g, fp);
+  fclose(fp);
   igraph_destroy(&g);
   return 0;
+}
+
+void cutNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni) {
+
+   /* Get all neighbours */
+   igraph_vector_t ni;
+   igraph_vector_init(&ni, 8);
+   igraph_neighbors(g,&ni,j,IGRAPH_ALL);
+
+   /* resize various vectors  for backward, current and next*/
+//   igraph_vector_init(bni, igraph_vector_size(&ni));
+//   igraph_vector_init(cni, igraph_vector_size(&ni));
+//   igraph_vector_init(nni, igraph_vector_size(&ni));
+
+   /* Find appropriate level to which the vertex belongs to */
+   int i=0;
+   while(j>=loc[i]) i++;
+
+   int b=(i==0)?-999:((i==1)?0:loc[i-2]);
+   int c=(i==0)?0:loc[i-1];
+   int n=loc[i];
+
+  for (i=0; i<igraph_vector_size(&ni); i++) {
+    int w = (int) VECTOR(ni)[i];
+//    printf("\nj=%d :: i=%d, w=%d, b=%d, c=%d, n=%d", j, i, w, b, c, n);
+    if(w>=b && w<c)
+	igraph_vector_insert(bni,0,w);	
+    if(w>=c && w<n)
+	igraph_vector_insert(cni,0,w);	
+    if(w>=n)
+	igraph_vector_insert(nni,0,w);
+//    fprintf(f, " %li", (long int) VECTOR(*v)[i]);
+  }
+   /* Finally resize the vectors and return */
+   igraph_vector_resize_min(bni); 
+   igraph_vector_resize_min(cni); 
+   igraph_vector_resize_min(nni); 
+
 }

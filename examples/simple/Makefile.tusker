@@ -39,3 +39,7 @@ runat: igraph_atfree
 	dot -Kfdp -n aa$$a.dot -Tpdf > aa$$a.pdf; \
 	scp aa$$a.pdf ssamal@cse.unl.edu:~/; \
 done
+run: igraph_atfree
+	./igraph_atfree; \
+	dot -Kfdp -n aa.dot -Tpdf >aa.pdf; \
+	scp aa.pdf ssamal@cse.unl.edu:~/;
