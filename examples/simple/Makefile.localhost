@@ -33,6 +33,11 @@ clean :
 	rm -rf `basename $$file .c`; \
 done
 
+run : igraph_atfree
+	./igraph_atfree aa.dot; \
+	dot -Kfdp -n aa.dot -Tpdf > aa.pdf; \
+	dot -Kfdp -n maa.dot -Tpdf > maa.pdf; \
+	evince aa.pdf maa.pdf
 runat : igraph_atfree
 	for a in `seq 1 20`; do \
 	sleep 3; \

@@ -23,6 +23,7 @@
 
 #include <igraph.h>
 
+void test(igraph_t *g2);
 int main() {
 
   igraph_t g1, g2;
@@ -34,14 +35,17 @@ int main() {
   VECTOR(v1)[4]=2; VECTOR(v1)[5]=3;
   VECTOR(v1)[6]=2; VECTOR(v1)[7]=2;
 
-  igraph_create(&g1, &v1, 0, 0);
+  igraph_create(&g1, &v1, 10, 0);
   igraph_copy(&g2, &g1);
-
+  test(&g2);
   igraph_vector_init(&v2, 0);
   igraph_get_edgelist(&g2, &v2, 0);
   if (!igraph_vector_all_e(&v1, &v2)) {
+    printf("Edges not same");
     return 1;
   }
+  else
+   printf("Edges are same");
 
   igraph_vector_destroy(&v1);
   igraph_vector_destroy(&v2);
@@ -49,4 +53,8 @@ int main() {
   igraph_destroy(&g2);
 
   return 0;
+}
+
+void test(igraph_t* g2) {
+  igraph_add_edge(g2,2,5);
 }
