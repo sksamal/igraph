@@ -1,0 +1,11 @@
+
+Vertex connectivity=3
+(Connect 10---4 and ) OR (Connect 5---4)
+(Connect 10---7 and Connect 9---7 and ) OR (Connect 5---7)
+(Connect 9---7 and ) OR (Connect 4---7)
+(Connect 10---4 and ) OR (Connect 5---4)
+(Connect 3---4 and Connect 0---4 and ) OR (Connect 5---4)
+(Connect 2---7 and ) OR (Connect 5---7)
+(Connect 2---7 and ) OR (Connect 5---7)
+(Connect 2---7 and ) OR (Connect 4---7)
+G is not AT-Free

@@ -1,0 +1,14 @@
+
+Vertex connectivity=2
+(Connect 6---4 and ) OR (Connect 5---4)
+(Connect 6---4 and ) OR (Connect 3---4)
+(Connect 9---8 and ) OR (Connect 6---8)
+(Connect 2---4 and ) OR (Connect 5---4)
+(Connect 2---4 and ) OR (Connect 3---4)
+(Connect 10---6 and ) OR (Connect 8---6)
+(Connect 10---6 and ) OR (Connect 7---6)
+(Connect 9---8 and ) OR (Connect 6---8)
+(Connect 4---6 and ) OR (Connect 8---6)
+(Connect 4---6 and ) OR (Connect 7---6)
+(Connect 5---8 and Connect 3---8 and ) OR (Connect 6---8)
+G is not AT-Free

@@ -3,8 +3,11 @@
 #include <igraph.h>
 
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
-igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t* g1);
+igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1);
 void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *fnn);
+
+
+
 int main(int argc, char** argv) {
   
   igraph_t g;
@@ -24,7 +27,7 @@ int main(int argc, char** argv) {
   int conns=3;
   int l=rand()%7+conns,s=rand()%7+conns;  
   int loc[l];    // store start
-  double scale=0.4;
+  double scale=1.0;
   int count=0;
 
 
@@ -94,6 +97,9 @@ int main(int argc, char** argv) {
   SETGAN(&g, "edges", igraph_ecount(&g));
 //  SETGAB(&g, "famous", 1);
 //  igraph_simplify(&g,1,1,0);
+  igraph_integer_t result;
+  igraph_vertex_connectivity(&g,&result,1);
+  printf("\nVertex connectivity=%d",result);
   for(int i=0;i<l;i++) {
     int o = (i==0)?0:loc[i-1];
     for(int j=o;j<loc[i];j++) {
@@ -112,6 +118,8 @@ int main(int argc, char** argv) {
   /* Check if AT-Free */
   igraph_vector_t left,current, right,fnn;
   igraph_bool_t isatfree=1;
+  igraph_copy(&g1,&g);
+
   for(int j=0; j<loc[l-1];j++)
    {
       igraph_vector_init(&left,1);
@@ -134,7 +142,6 @@ int main(int argc, char** argv) {
  	printf("%d ",(int) VECTOR(fnn)[i]);	
       printf(")"); */
 //      printf("\n\t\t j=%d : left=%d curr=%d right=%d",j, igraph_vector_size(&left),igraph_vector_size(&current),igraph_vector_size(&right));
-      igraph_copy(&g1,&g);
       isatfree = isatfree & isDominSatisfied(&g,j,loc,&fnn,&g1);
 
   igraph_vector_destroy(&left);
@@ -145,20 +152,24 @@ int main(int argc, char** argv) {
 
   if(isatfree) printf("\nG is AT-Free");
   else printf("\nG is not AT-Free");
+
+/*  igraph_t g2;
+  isatfree=1;
+  for(int j=0;j<igraph_vcount(&g1);j++) {
+  igraph_vector_init(&fnn,1);
+  forwardNonNeighbors(&g1,j,loc,l,&fnn);
+  isatfree = isatfree & isDominSatisfied(&g1,j,loc,&fnn,&g2);
+  }
+  if(isatfree) printf("\nG' is AT-Free");
+  else printf("\nG' is not AT-Free"); */
+  
 //  igraph_write_graph_graphml(&g, stdout, /*prefixattr=*/ 1);
-  igraph_vector_t v1, v2;
-  igraph_vector_init(&v2, 0);
-  igraph_vector_init(&v1, 0);
-  igraph_get_edgelist(&g, &v1, 0);
-  igraph_get_edgelist(&g1, &v2, 0);
-  if (!igraph_vector_all_e(&v1, &v2))
-    printf("Edges not same");
-  else
-   printf("Edges are same");
   FILE *fp = fopen(argv[1],"w");
   igraph_write_graph_dot(&g, fp);
   fclose(fp);
-  fp = fopen("maa.dot","w");
+  char spos[20];
+  sprintf(spos,"m%s",argv[1]);
+  fp = fopen(spos,"w");
   igraph_write_graph_dot(&g1, fp);
   fclose(fp);
   igraph_destroy(&g);
@@ -218,7 +229,7 @@ void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vecto
    igraph_vector_resize_min(fnn);
 }
 
-igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t* g1) {
+igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1) {
 
    igraph_bool_t connected, atfree, isatfree=1;
 
@@ -244,6 +255,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
    		igraph_vector_init(&kcni, 1);
    		igraph_vector_init(&knni, 1);
 		cutNeighbors(g,v,loc,&kbni,&kcni,&knni);
+		igraph_bool_t shallAdd = rand()%2;
 		for (int l=0; l<igraph_vector_size(&kbni)-1; l++) {
 		  int u = (int) VECTOR(kbni)[l];
 	          igraph_are_connected(g,u,j,&connected);
@@ -251,11 +263,14 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		     if(atfree) printf("\n(");
 		     atfree=0;
 		     printf("Connect %d---%d and ",u,j);
+		     igraph_are_connected(g1,u,j,&connected);
+		     if(shallAdd && !connected) igraph_add_edge(g1,u,j);
 		  }
 	        }
 		if(!atfree) {
 		  printf(") OR (Connect %d---%d)",v,j);
-		  igraph_add_edge(g1,v,j);
+		  igraph_are_connected(g1,v,j,&connected);
+		  if(!connected && !shallAdd) igraph_add_edge(g1,v,j);
 		}
 		isatfree=isatfree & atfree;
 		igraph_vector_destroy(&kbni);
@@ -291,6 +306,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
    		igraph_vector_init(&kcni, 1);
    		igraph_vector_init(&knni, 1);
 		cutNeighbors(g,v,loc,&kbni,&kcni,&knni);
+		igraph_bool_t shallAdd = rand()%2;
 		for (int l=0; l<igraph_vector_size(&knni)-1; l++) {
 		  int u = (int) VECTOR(knni)[l];
 	          igraph_are_connected(g,u,w,&connected);
@@ -298,11 +314,14 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		     if(atfree) printf("\n(");
 		     atfree=0;
 		     printf("Connect %d---%d and ",u,w);
+		     igraph_are_connected(g1,u,w,&connected);
+		     if(shallAdd && !connected) igraph_add_edge(g1,u,w); 
 		  }
 	        }
 		if(!atfree) {
 		  printf(") OR (Connect %d---%d)",v,w);
-		  igraph_add_edge(g1,v,w);
+		  igraph_are_connected(g1,v,w,&connected);
+		  if(!connected && !shallAdd) igraph_add_edge(g1,v,w);
 	        }
 		isatfree=isatfree & atfree;
 		igraph_vector_destroy(&kbni);

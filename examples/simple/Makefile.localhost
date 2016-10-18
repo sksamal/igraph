@@ -41,8 +41,11 @@ run : igraph_atfree
 runat : igraph_atfree
 	for a in `seq 1 20`; do \
 	sleep 3; \
-	./igraph_atfree > aa$$a.dot ;\
+	./igraph_atfree aa$$a.dot >> aa$$a.txt;\
 	dot -Kfdp -n aa$$a.dot -Tpdf > aa$$a.pdf; \
+	dot -Kfdp -n maa$$a.dot -Tpdf > maa$$a.pdf; \
+	pdfunite aa$$a.pdf maa$$a.pdf caa$$a.pdf;\
+	rm -rf aa$$a.dot maa$$a.dot aa$$a.pdf maa$$a.pdf;\
 done
-	pdfunite aa*.pdf caa.pdf; \
-	rm -f aa*.dot aa*.pdf; \
+	pdfunite caa*.pdf ccaa.pdf; \
+	rm -f caa*.pdf; \

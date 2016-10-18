@@ -1,0 +1,9 @@
+
+Vertex connectivity=3
+(Connect 6---5 and ) OR (Connect 4---5)
+(Connect 6---5 and ) OR (Connect 3---5)
+(Connect 8---4 and ) OR (Connect 5---4)
+(Connect 1---4 and ) OR (Connect 5---4)
+(Connect 0---5 and ) OR (Connect 4---5)
+(Connect 0---5 and ) OR (Connect 3---5)
+G is not AT-Free
