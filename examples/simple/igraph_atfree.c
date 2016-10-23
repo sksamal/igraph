@@ -5,7 +5,7 @@
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
 igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1);
 void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *fnn);
-igraph_vector_t getNeighbors(igraph_t* g,int j, int *loc,int dir);
+void getNeighbors(igraph_t* g,int j, int *loc,igraph_vector_t *ne, int dir);
 igraph_bool_t isHamiltonian(igraph_t* g, int *loc, int l);
 
 int main(int argc, char** argv) {
@@ -100,13 +100,14 @@ int main(int argc, char** argv) {
   igraph_integer_t result;
   igraph_vertex_connectivity(&g,&result,1);
   printf("\nVertex connectivity=%d",result);
+  double off=0.1;
   for(int i=0;i<l;i++) {
     int o = (i==0)?0:loc[i-1];
     for(int j=o;j<loc[i];j++) {
   char spos[8];
   int low = (s-(loc[i]-o))/2;
  // SETVAS(&g, "fixedsize",j,"true");
-  sprintf(spos,"%f,%f!",i*scale,(j-o+low)*scale);
+  sprintf(spos,"%f,%f!",i*scale-((j-o)%2)*off,(j-o+low)*scale);
   SETVAS(&g, "pos",j,spos);
   SETVAS(&g, "shape",j,"point");
   SETVAN(&g, "fontsize",j,6);
@@ -179,23 +180,19 @@ int main(int argc, char** argv) {
 }
 
 // dir=-1 means left, dir=0 current, dir=1 means right 
-igraph_vector_t getNeighbors(igraph_t* g, int j, int *loc, int dir) {
+void getNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *ne, int dir) {
       igraph_vector_t left,current,right;
       igraph_vector_init(&left,1);
       igraph_vector_init(&current,1);
       igraph_vector_init(&right,1);
 
-      igraph_vector_t retNode;
-      cutNeighbors(g,j,loc,&left,&current,&right);
-      if(dir>0) retNode = right;
-      if(dir<0) retNode = left;
-      else retNode = current; 
+      if(dir>0) cutNeighbors(g,j,loc,&left,&current,ne);
+      if(dir<0) cutNeighbors(g,j,loc,ne,&current,&right);
+      else cutNeighbors(g,j,loc,&left,ne,&right); 
 	
-      if(!dir<0) igraph_vector_destroy(&left);
-      if(!dir>0) igraph_vector_destroy(&current);
-      if(!dir==0)igraph_vector_destroy(&right);
-	
-      return retNode;   
+      igraph_vector_destroy(&left);
+      igraph_vector_destroy(&current);
+      igraph_vector_destroy(&right);
 }
 
 void cutNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni) {
@@ -218,9 +215,9 @@ void cutNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *bni, igraph_vec
    int c=(i==0)?0:loc[i-1];
    int n=loc[i];
 
-  for (i=0; i<igraph_vector_size(&ni); i++) {
-    int w = (int) VECTOR(ni)[i];
-//    printf("\nj=%d :: i=%d, w=%d, b=%d, c=%d, n=%d", j, i, w, b, c, n);
+  for (int k=0; k<igraph_vector_size(&ni); k++) {
+    int w = (int) VECTOR(ni)[k];
+//    printf("\nj=%d :: i=%d, k=%d, w=%d, b=%d, c=%d, n=%d", j, i, k, w, b, c, n);
     if(w>=b && w<c)
 	igraph_vector_insert(bni,0,w);	
     if(w>=c && w<n)
@@ -362,25 +359,35 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 
    igraph_vector_t snei;
+   igraph_vector_init(&snei,1);
    int start = 0;
+   int off = 0;
    for(int l=0;l<locsize;l++) {
 	int size = loc[l]-start;
- 	int visited[size], cc=1;		
+ 	int visited[size], cc=0;		
 	for(int i=0;i<size;i++)
 	   visited[i]=0;
 
 	for(int i=0;i<size;i++) {
-	   if(visited[i]==0) visited[i]=cc++;	
+	   if(visited[i]==0) visited[i]=++cc;	
 	   if(visited[i]<0) continue;
-	   snei = getNeighbors(g,i,loc,0); 
+   	   igraph_vector_t snei;
+    	   igraph_vector_init(&snei,1);
+	   getNeighbors(g,start+i,loc,&snei,0); 
+  //     	   printf("\n\t start=%d, start+i=%d,visited[i]=%d size(snei)=%d cc=%d",start,start+i,visited[i],igraph_vector_size(&snei)-1,cc);
 	   for (int k=0; k<igraph_vector_size(&snei)-1; k++) {
 	  	int u = (int) VECTOR(snei)[k];
-	  	if(visited[u-start]==0) visited[u-start]=visited[i];
+	  	if(visited[u-start]==0) visited[u-start]=abs(visited[i]);
+//		printf("\n\t\tu=%du-start=%d, visited[u-start]=%d",u,u-start,visited[u-start]);
 	   }
 	   visited[i]*=-1;
+	   igraph_vector_destroy(&snei);
 	}
        printf("\nLevel%d: size=%d, cc=%d",l,size,cc);
-       start = loc[l-1];
+       start = loc[l];
+       off+=(size-cc-2);
    }
+	if(off<0) printf("\nGraph is non-hamiltonian");
+	else printf("\nGraph is hamiltonian");
 
 }
