@@ -5,8 +5,8 @@
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
 igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1);
 void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *fnn);
-
-
+igraph_vector_t getNeighbors(igraph_t* g,int j, int *loc,int dir);
+igraph_bool_t isHamiltonian(igraph_t* g, int *loc, int l);
 
 int main(int argc, char** argv) {
   
@@ -172,9 +172,30 @@ int main(int argc, char** argv) {
   fp = fopen(spos,"w");
   igraph_write_graph_dot(&g1, fp);
   fclose(fp);
+  isHamiltonian(&g1,loc,l);
   igraph_destroy(&g);
   igraph_destroy(&g1);
   return 0;
+}
+
+// dir=-1 means left, dir=0 current, dir=1 means right 
+igraph_vector_t getNeighbors(igraph_t* g, int j, int *loc, int dir) {
+      igraph_vector_t left,current,right;
+      igraph_vector_init(&left,1);
+      igraph_vector_init(&current,1);
+      igraph_vector_init(&right,1);
+
+      igraph_vector_t retNode;
+      cutNeighbors(g,j,loc,&left,&current,&right);
+      if(dir>0) retNode = right;
+      if(dir<0) retNode = left;
+      else retNode = current; 
+	
+      if(!dir<0) igraph_vector_destroy(&left);
+      if(!dir>0) igraph_vector_destroy(&current);
+      if(!dir==0)igraph_vector_destroy(&right);
+	
+      return retNode;   
 }
 
 void cutNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni) {
@@ -335,4 +356,31 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 
      }
   return isatfree;		
+}
+
+/* Sufficient condition for Hamiltonian */
+igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
+
+   igraph_vector_t snei;
+   int start = 0;
+   for(int l=0;l<locsize;l++) {
+	int size = loc[l]-start;
+ 	int visited[size], cc=1;		
+	for(int i=0;i<size;i++)
+	   visited[i]=0;
+
+	for(int i=0;i<size;i++) {
+	   if(visited[i]==0) visited[i]=cc++;	
+	   if(visited[i]<0) continue;
+	   snei = getNeighbors(g,i,loc,0); 
+	   for (int k=0; k<igraph_vector_size(&snei)-1; k++) {
+	  	int u = (int) VECTOR(snei)[k];
+	  	if(visited[u-start]==0) visited[u-start]=visited[i];
+	   }
+	   visited[i]*=-1;
+	}
+       printf("\nLevel%d: size=%d, cc=%d",l,size,cc);
+       start = loc[l-1];
+   }
+
 }
