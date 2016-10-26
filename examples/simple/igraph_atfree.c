@@ -93,6 +93,7 @@ int main(int argc, char** argv) {
    } */
 
   SETGAS(&g, "name", "Graph G");
+  SETGAS(&g, "label", "Graph G");
   SETGAN(&g, "vertices", igraph_vcount(&g));
   SETGAN(&g, "edges", igraph_ecount(&g));
 //  SETGAB(&g, "famous", 1);
@@ -154,28 +155,36 @@ int main(int argc, char** argv) {
   if(isatfree) printf("\nG is AT-Free");
   else printf("\nG is not AT-Free");
 
-/*  igraph_t g2;
-  isatfree=1;
+  igraph_t g2;
+  igraph_copy(&g2,&g1);
+  int isatfree1=1;
   for(int j=0;j<igraph_vcount(&g1);j++) {
   igraph_vector_init(&fnn,1);
   forwardNonNeighbors(&g1,j,loc,l,&fnn);
   isatfree = isatfree & isDominSatisfied(&g1,j,loc,&fnn,&g2);
   }
-  if(isatfree) printf("\nG' is AT-Free");
-  else printf("\nG' is not AT-Free"); */
+  if(isatfree1) printf("\nG' is AT-Free");
+  else printf("\nG' is not AT-Free");
   
 //  igraph_write_graph_graphml(&g, stdout, /*prefixattr=*/ 1);
   FILE *fp = fopen(argv[1],"w");
+  char spos[80];
+  sprintf(spos,"Graph=%s, ATFree=%d",argv[1],isatfree);
+  SETGAS(&g, "label", spos);
+  SETGAS(&g, "labelloc", "bottom");
   igraph_write_graph_dot(&g, fp);
   fclose(fp);
-  char spos[20];
   sprintf(spos,"m%s",argv[1]);
   fp = fopen(spos,"w");
+  sprintf(spos,"Graph=%s, ATFree=%d, Hamiltonian=%d",argv[1],isatfree1,isHamiltonian(&g1,loc,l));
+  SETGAS(&g1, "label", spos);
+  SETGAS(&g, "labelloc", "bottom");
+//  SETGAS(&g, "labeljust", "left");
   igraph_write_graph_dot(&g1, fp);
   fclose(fp);
-  isHamiltonian(&g1,loc,l);
   igraph_destroy(&g);
   igraph_destroy(&g1);
+  igraph_destroy(&g2);
   return 0;
 }
 
@@ -360,16 +369,19 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 
    igraph_vector_t snei;
    igraph_vector_init(&snei,1);
-   int start = 0;
-   int off = 0;
+   int start = 0, totextra=0;;
+   int contr[locsize], needc[locsize], extra[locsize], maxc[locsize], minc[locsize];
+   int isHamiltonian = 1;
+   printf("\nLevel [minc,maxc] needc extra contr");
    for(int l=0;l<locsize;l++) {
-	int size = loc[l]-start;
- 	int visited[size], cc=0;		
-	for(int i=0;i<size;i++)
+	maxc[l] = loc[l]-start;  /* Maximum contribution or number of vertices in the elvel */
+        minc[l] =0;
+ 	int visited[maxc[l]];		
+	for(int i=0;i<maxc[l];i++)
 	   visited[i]=0;
 
-	for(int i=0;i<size;i++) {
-	   if(visited[i]==0) visited[i]=++cc;	
+	for(int i=0;i<maxc[l];i++) {
+	   if(visited[i]==0) visited[i]=++minc[l];	
 	   if(visited[i]<0) continue;
    	   igraph_vector_t snei;
     	   igraph_vector_init(&snei,1);
@@ -383,11 +395,20 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 	   visited[i]*=-1;
 	   igraph_vector_destroy(&snei);
 	}
-       printf("\nLevel%d: size=%d, cc=%d",l,size,cc);
-       start = loc[l];
-       off+=(size-cc-2);
-   }
-	if(off<0) printf("\nGraph is non-hamiltonian");
-	else printf("\nGraph is hamiltonian");
 
+       if(l==0 || l==locsize-1) needc[l]=1;
+       else needc[l]=2;
+
+       if(needc[l]>maxc[l]) isHamiltonian = 0;
+       extra[l]=(needc[l]-minc[l]);
+       contr[l]=(maxc[l]-needc[l]);
+       //printf("\nLevel [minc,maxc] needc extra contr");
+       printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
+       start = loc[l];
+       totextra+=extra[l];
+//       off+=(size-cc-2);
+   }
+	if(!isHamiltonian || totextra<0) printf("\nGraph is non-hamiltonian");
+	else printf("\nGraph is hamiltonian");
+	return (isHamiltonian && totextra<0);
 }

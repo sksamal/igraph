@@ -35,11 +35,13 @@ done
 runat: igraph_atfree
 	for a in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 ; do \
 	sleep 3; \
-	./igraph_atfree > aa$$a.dot ;\
+	./igraph_atfree aa$$a.dot > aa$$a.txt;\
 	dot -Kfdp -n aa$$a.dot -Tpdf > aa$$a.pdf; \
-	scp aa$$a.pdf ssamal@cse.unl.edu:~/; \
+	dot -Kfdp -n maa$$a.dot -Tpdf > maa$$a.pdf; \
+	scp aa$$a.pdf maa$$a.pdf aa$$a.txt ssamal@cse.unl.edu:~/igraph; \
 done
 run: igraph_atfree
-	./igraph_atfree; \
+	./igraph_atfree aa.dot > aa.txt; \
 	dot -Kfdp -n aa.dot -Tpdf >aa.pdf; \
-	scp aa.pdf ssamal@cse.unl.edu:~/;
+	dot -Kfdp -n maa.dot -Tpdf >maa.pdf; \
+	scp aa.pdf maa.pdf aa.txt ssamal@cse.unl.edu:~/igraph;
