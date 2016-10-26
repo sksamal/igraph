@@ -169,14 +169,14 @@ int main(int argc, char** argv) {
 //  igraph_write_graph_graphml(&g, stdout, /*prefixattr=*/ 1);
   FILE *fp = fopen(argv[1],"w");
   char spos[80];
-  sprintf(spos,"Graph=%s, ATFree=%d",argv[1],isatfree);
+  sprintf(spos,"Graph=%s, AT-Free=%d",argv[1],isatfree);
   SETGAS(&g, "label", spos);
   SETGAS(&g, "labelloc", "bottom");
   igraph_write_graph_dot(&g, fp);
   fclose(fp);
   sprintf(spos,"m%s",argv[1]);
   fp = fopen(spos,"w");
-  sprintf(spos,"Graph=%s, ATFree=%d, Hamiltonian=%d",argv[1],isatfree1,isHamiltonian(&g1,loc,l));
+  sprintf(spos,"Graph=%s, AT-Free=%d, Hamiltonian=%d",argv[1],isatfree1,isHamiltonian(&g1,loc,l));
   SETGAS(&g1, "label", spos);
   SETGAS(&g, "labelloc", "bottom");
 //  SETGAS(&g, "labeljust", "left");
@@ -408,7 +408,24 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
        totextra+=extra[l];
 //       off+=(size-cc-2);
    }
-	if(!isHamiltonian || totextra<0) printf("\nGraph is non-hamiltonian");
-	else printf("\nGraph is hamiltonian");
+	if(!isHamiltonian || totextra<0) printf("\nJ0:Graph is non-hamiltonian");
+	else { printf("\nJ0:Graph is hamiltonian"); return 1; }
+
+	totextra=0;
+   	printf("\n\nLevel [minc,maxc] needc extra contr");
+   	for(int l=0;l<locsize;l++) {
+		if(l!=0)  
+		   while(extra[l]<0 && contr[l-1]>0)
+			{ extra[l]++; contr[l-1]--; }
+
+		while(extra[l]<0 && contr[l+1]>0)
+			{ extra[l]++; contr[l+1]--; }
+       		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
+	        totextra+=extra[l];
+	 }
+			
+	if(!isHamiltonian || totextra<0) printf("\nJ1:Graph is non-hamiltonian");
+	else printf("\nJ1:Graph is hamiltonian");
+	   
 	return (isHamiltonian && totextra>=0);
 }

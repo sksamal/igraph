@@ -37,15 +37,15 @@ run : igraph_atfree
 	./igraph_atfree aa.dot; \
 	dot -Kfdp -n aa.dot -Tpdf > aa.pdf; \
 	dot -Kfdp -n maa.dot -Tpdf > maa.pdf; \
-	evince aa.pdf maa.pdf
+	evince maa.pdf
 runat : igraph_atfree
-	for a in `seq 1 20`; do \
+	for a in `seq 1 40`; do \
 	sleep 3; \
 	./igraph_atfree aa$$a.dot >> aa$$a.txt;\
 	dot -Kfdp -n aa$$a.dot -Tpdf > aa$$a.pdf; \
-	dot -Kfdp -n maa$$a.dot -Tpdf > maa$$a.pdf; \
-	pdfunite aa$$a.pdf maa$$a.pdf caa$$a.pdf;\
-	rm -rf aa$$a.dot maa$$a.dot aa$$a.pdf maa$$a.pdf;\
+	dot -Kfdp -n maa$$a.dot -Tpdf > maa$$a.pdf;\
+	rm -rf aa$$a.dot maa$$a.dot;\
 done
-	pdfunite caa*.pdf ccaa.pdf; \
-	rm -f caa*.pdf; \
+	pdfunite aa*.pdf ccaa.pdf; \
+	pdfunite maa*.pdf mmaa.pdf; \
+	rm -f caa*.pdf maa*.pdf; \
