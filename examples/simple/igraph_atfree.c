@@ -410,5 +410,5 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
    }
 	if(!isHamiltonian || totextra<0) printf("\nGraph is non-hamiltonian");
 	else printf("\nGraph is hamiltonian");
-	return (isHamiltonian && totextra<0);
+	return (isHamiltonian && totextra>=0);
 }
