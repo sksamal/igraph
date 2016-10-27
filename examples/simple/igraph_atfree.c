@@ -7,6 +7,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *fnn);
 void getNeighbors(igraph_t* g,int j, int *loc,igraph_vector_t *ne, int dir);
 igraph_bool_t isHamiltonian(igraph_t* g, int *loc, int l);
+igraph_bool_t isHamUsingIsomorphism(igraph_t *g);
 
 int main(int argc, char** argv) {
   
@@ -179,6 +180,8 @@ int main(int argc, char** argv) {
   sprintf(spos,"Graph=%s, AT-Free=%d, Hamiltonian=%d",argv[1],isatfree1,isHamiltonian(&g1,loc,l));
   SETGAS(&g1, "label", spos);
   SETGAS(&g, "labelloc", "bottom");
+   
+  isHamUsingIsomorphism(&g1);
 //  SETGAS(&g, "labeljust", "left");
   igraph_write_graph_dot(&g1, fp);
   fclose(fp);
@@ -364,6 +367,19 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
   return isatfree;		
 }
 
+igraph_bool_t isHamUsingIsomorphism(igraph_t *g) {
+  igraph_t ring;
+  igraph_bool_t iso;
+  igraph_vector_t map;
+  igraph_ring(&ring, igraph_vcount(g), /*directed=*/ 0, /*mutual=*/ 0, /*circular=*/1);
+  igraph_subisomorphic_lad(&ring, g, NULL, &iso, &map,NULL, /* induced = */ 0, 0);
+  if (!iso) printf("\nLAD Isomorphism:G is non-hamiltonian");
+  else printf("\nLAD Isomorphism: G is hamiltonian");
+  igraph_subisomorphic_vf2(g, &ring, NULL, NULL, NULL, NULL, &iso, &map,NULL,NULL,NULL,NULL);
+  if (!iso) printf("\nVF2 Isomorphism:G is non-hamiltonian");
+  else printf("\nVF2 Isomorphism: G is hamiltonian");
+  return iso;
+}
 /* Sufficient condition for Hamiltonian */
 igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 
@@ -417,8 +433,8 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 		if(l!=0)  
 		   while(extra[l]<0 && contr[l-1]>0)
 			{ extra[l]++; contr[l-1]--; }
-
-		while(extra[l]<0 && contr[l+1]>0)
+		if(l!=locsize-1)
+		   while(extra[l]<0 && contr[l+1]>0)
 			{ extra[l]++; contr[l+1]--; }
        		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
 	        totextra+=extra[l];
