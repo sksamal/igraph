@@ -1,13 +1,15 @@
 /* -*- mode: C -*-  */
 
 #include <igraph.h>
-
+#define MLEVELS 7
+#define LSIZE 4 
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
 igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1);
 void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *fnn);
 void getNeighbors(igraph_t* g,int j, int *loc,igraph_vector_t *ne, int dir);
 igraph_bool_t isHamiltonian(igraph_t* g, int *loc, int l);
-igraph_bool_t isHamUsingIsomorphism(igraph_t *g);
+void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path);
+void isHamUsingVF2(igraph_t *g, igraph_bool_t *iso,char *path);
 
 int main(int argc, char** argv) {
   
@@ -26,7 +28,7 @@ int main(int argc, char** argv) {
    }
   // l = number of levels, s = max size of each level (>=2)
   int conns=3;
-  int l=rand()%7+conns,s=rand()%7+conns;  
+  int l=rand()%MLEVELS+conns,s=rand()%LSIZE+conns;  
   int loc[l];    // store start
   double scale=1.0;
   int count=0;
@@ -169,7 +171,7 @@ int main(int argc, char** argv) {
   
 //  igraph_write_graph_graphml(&g, stdout, /*prefixattr=*/ 1);
   FILE *fp = fopen(argv[1],"w");
-  char spos[80];
+  char spos[680];
   sprintf(spos,"Graph=%s, AT-Free=%d",argv[1],isatfree);
   SETGAS(&g, "label", spos);
   SETGAS(&g, "labelloc", "bottom");
@@ -177,11 +179,19 @@ int main(int argc, char** argv) {
   fclose(fp);
   sprintf(spos,"m%s",argv[1]);
   fp = fopen(spos,"w");
-  sprintf(spos,"Graph=%s, AT-Free=%d, Hamiltonian=%d",argv[1],isatfree1,isHamiltonian(&g1,loc,l));
+  char path1[300], path2[300];
+  path1[0]='\0';
+  path2[0]='\0';
+  igraph_bool_t iso1=0, iso2=0;
+  isHamUsingLAD(&g1,&iso1, path1);
+  printf("Path1=%si, iso1=%d", path1,iso1);
+  isHamUsingVF2(&g1,&iso2, path2);
+  printf("Path2=%si, iso2=%d", path2,iso2);
+  sprintf(spos,"Graph=%s, AT-Free=%d,\nOur=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",argv[1],isatfree1,isHamiltonian(&g1,loc,l),iso1, path1,iso2, path2);
   SETGAS(&g1, "label", spos);
   SETGAS(&g, "labelloc", "bottom");
    
-  isHamUsingIsomorphism(&g1);
+//  isHamUsingIsomorphism(&g1);
 //  SETGAS(&g, "labeljust", "left");
   igraph_write_graph_dot(&g1, fp);
   fclose(fp);
@@ -297,10 +307,12 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		     if(shallAdd && !connected) igraph_add_edge(g1,u,j);
 		  }
 	        }
+		if(shallAdd) printf("*");
 		if(!atfree) {
 		  printf(") OR (Connect %d---%d)",v,j);
 		  igraph_are_connected(g1,v,j,&connected);
 		  if(!connected && !shallAdd) igraph_add_edge(g1,v,j);
+		  if(!shallAdd) printf("*");
 		}
 		isatfree=isatfree & atfree;
 		igraph_vector_destroy(&kbni);
@@ -347,11 +359,13 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		     igraph_are_connected(g1,u,w,&connected);
 		     if(shallAdd && !connected) igraph_add_edge(g1,u,w); 
 		  }
-	        }
+	        } 
+		if(shallAdd) printf("*");
 		if(!atfree) {
 		  printf(") OR (Connect %d---%d)",v,w);
 		  igraph_are_connected(g1,v,w,&connected);
 		  if(!connected && !shallAdd) igraph_add_edge(g1,v,w);
+		  if(!shallAdd) printf("*");
 	        }
 		isatfree=isatfree & atfree;
 		igraph_vector_destroy(&kbni);
@@ -367,24 +381,45 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
   return isatfree;		
 }
 
-igraph_bool_t isHamUsingIsomorphism(igraph_t *g) {
+void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path) {
   igraph_t ring;
-  igraph_bool_t iso;
+//  igraph_bool_t iso;
   igraph_vector_t map;
+  igraph_vector_init(&map,0);
   igraph_ring(&ring, igraph_vcount(g), /*directed=*/ 0, /*mutual=*/ 0, /*circular=*/1);
-  igraph_subisomorphic_lad(&ring, g, NULL, &iso, &map,NULL, /* induced = */ 0, 0);
-  if (!iso) printf("\nLAD Isomorphism:G is non-hamiltonian");
-  else printf("\nLAD Isomorphism: G is hamiltonian");
-  igraph_subisomorphic_vf2(g, &ring, NULL, NULL, NULL, NULL, &iso, &map,NULL,NULL,NULL,NULL);
-  if (!iso) printf("\nVF2 Isomorphism:G is non-hamiltonian");
-  else printf("\nVF2 Isomorphism: G is hamiltonian");
-  return iso;
+  igraph_subisomorphic_lad(&ring, g, NULL, iso, &map,NULL, /* induced = */ 0, 30);
+  if (!(*iso)) printf("\nLAD Isomorphism:G is non-hamiltonian");
+  else { 
+	printf("\nLAD Isomorphism: G is hamiltonian");
+  	sprintf(path,"HC:");
+  	for(int i=0;i<igraph_vector_size(&map);i++)
+	   sprintf(path,"%s-%d",path,(int) VECTOR(map)[i]);
+       }  
+  igraph_vector_destroy(&map);
+  igraph_destroy(&ring);
 }
-/* Sufficient condition for Hamiltonian */
+
+void isHamUsingVF2(igraph_t *g, igraph_bool_t *iso,char *path) {
+  igraph_t ring;
+//  igraph_bool_t iso;
+  igraph_vector_t map;
+  igraph_vector_init(&map,0);
+  igraph_ring(&ring, igraph_vcount(g), /*directed=*/ 0, /*mutual=*/ 0, /*circular=*/1);
+  printf("In VF2");
+  igraph_subisomorphic_vf2(g, &ring, NULL, NULL, NULL, NULL, iso, &map,NULL,NULL,NULL,NULL);
+  if (!(*iso)) printf("\nVF2 Isomorphism:G is non-hamiltonian");
+  else  {
+	 printf("\nVF2 Isomorphism: G is hamiltonian");
+	 sprintf(path,"HC:");
+  	 for(int i=0;i<igraph_vector_size(&map);i++)
+	 sprintf(path,"%s-%d",path,(int) VECTOR(map)[i]);
+	}
+  igraph_vector_destroy(&map);
+  igraph_destroy(&ring);
+}
+/* Our algorithm for Hamiltonian */
 igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 
-   igraph_vector_t snei;
-   igraph_vector_init(&snei,1);
    int start = 0, totextra=0;;
    int contr[locsize], needc[locsize], extra[locsize], maxc[locsize], minc[locsize];
    int isHamiltonian = 1;
