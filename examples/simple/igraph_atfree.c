@@ -184,10 +184,8 @@ int main(int argc, char** argv) {
   path2[0]='\0';
   igraph_bool_t iso1=0, iso2=0;
   isHamUsingLAD(&g1,&iso1, path1);
-  printf("Path1=%si, iso1=%d", path1,iso1);
   isHamUsingVF2(&g1,&iso2, path2);
-  printf("Path2=%si, iso2=%d", path2,iso2);
-  sprintf(spos,"Graph=%s, AT-Free=%d,\nOur=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",argv[1],isatfree1,isHamiltonian(&g1,loc,l),iso1, path1,iso2, path2);
+  sprintf(spos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",argv[1],isatfree1,isHamiltonian(&g1,loc,l),iso1, path1,iso2, path2);
   SETGAS(&g1, "label", spos);
   SETGAS(&g, "labelloc", "bottom");
    
@@ -387,6 +385,7 @@ void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path) {
   igraph_vector_t map;
   igraph_vector_init(&map,0);
   igraph_ring(&ring, igraph_vcount(g), /*directed=*/ 0, /*mutual=*/ 0, /*circular=*/1);
+  printf("\nInLAD");
   igraph_subisomorphic_lad(&ring, g, NULL, iso, &map,NULL, /* induced = */ 0, 30);
   if (!(*iso)) printf("\nLAD Isomorphism:G is non-hamiltonian");
   else { 

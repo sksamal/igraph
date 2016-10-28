@@ -1,53 +1,68 @@
 
 Vertex connectivity=3
-(Connect 12---5 and ) OR (Connect 7---5)
-(Connect 2---5 and ) OR (Connect 7---5)
-(Connect 13---12 and ) OR (Connect 10---12)
-(Connect 14---12 and ) OR (Connect 9---12)
-(Connect 13---12 and ) OR (Connect 8---12)
-(Connect 13---11 and ) OR (Connect 10---11)
-(Connect 13---11 and ) OR (Connect 8---11)
-(Connect 14---12 and ) OR (Connect 11---12)
-(Connect 13---12 and ) OR (Connect 8---12)
-(Connect 14---10 and ) OR (Connect 11---10)
-(Connect 13---9 and ) OR (Connect 8---9)
-(Connect 16---11 and ) OR (Connect 12---11)
-(Connect 16---10 and ) OR (Connect 12---10)
-(Connect 16---8 and Connect 15---8 and ) OR (Connect 12---8)
-(Connect 15---8 and Connect 14---8 and ) OR (Connect 9---8)
-(Connect 7---8 and ) OR (Connect 12---8)
-(Connect 7---8 and ) OR (Connect 12---8)
-(Connect 7---8 and ) OR (Connect 9---8)
-(Connect 17---15 and ) OR (Connect 13---15)
-(Connect 7---8 and ) OR (Connect 9---8)
-(Connect 19---16 and ) OR (Connect 15---16)
-(Connect 6---9 and ) OR (Connect 8---9)
-(Connect 19---13 and ) OR (Connect 15---13)
-(Connect 7---10 and ) OR (Connect 12---10)
-(Connect 19---16 and ) OR (Connect 15---16)
-(Connect 6---10 and ) OR (Connect 11---10)
-(Connect 19---14 and ) OR (Connect 15---14)
-(Connect 7---11 and ) OR (Connect 12---11)
-(Connect 19---16 and ) OR (Connect 15---16)
-(Connect 5---11 and ) OR (Connect 10---11)
-(Connect 5---11 and ) OR (Connect 8---11)
-(Connect 19---13 and ) OR (Connect 15---13)
-(Connect 6---12 and ) OR (Connect 11---12)
-(Connect 5---12 and ) OR (Connect 9---12)
-(Connect 18---14 and ) OR (Connect 16---14)
-(Connect 19---14 and ) OR (Connect 15---14)
-(Connect 5---12 and ) OR (Connect 10---12)
-(Connect 6---12 and Connect 5---12 and ) OR (Connect 8---12)
-(Connect 19---13 and ) OR (Connect 15---13)
-(Connect 12---13 and Connect 11---13 and Connect 9---13 and ) OR (Connect 15---13)
-(Connect 12---14 and Connect 10---14 and ) OR (Connect 15---14)
-(Connect 12---14 and ) OR (Connect 16---14)
-(Connect 23---18 and Connect 21---18 and ) OR (Connect 19---18)
-(Connect 8---15 and ) OR (Connect 13---15)
-(Connect 11---16 and Connect 10---16 and Connect 9---16 and ) OR (Connect 15---16)
-(Connect 22---19 and Connect 20---19 and ) OR (Connect 18---19)
-(Connect 15---18 and ) OR (Connect 19---18)
-(Connect 15---18 and ) OR (Connect 19---18)
-(Connect 16---19 and ) OR (Connect 18---19)
-(Connect 16---19 and ) OR (Connect 18---19)
-G is not AT-Free
+(Connect 9---4 and Connect 7---4 and Connect 6---4 and *) OR (Connect 5---4)
+(Connect 13---9 and Connect 12---9 and ) OR (Connect 6---9)*
+(Connect 13---8 and Connect 12---8 and Connect 11---8 and ) OR (Connect 6---8)*
+(Connect 13---7 and ) OR (Connect 6---7)*
+(Connect 0---4 and *) OR (Connect 5---4)*
+(Connect 0---4 and *) OR (Connect 5---4)
+(Connect 0---4 and ) OR (Connect 5---4)*
+(Connect 10---6 and *) OR (Connect 8---6)*
+(Connect 11---8 and *) OR (Connect 9---8)
+(Connect 13---8 and Connect 12---8 and Connect 11---8 and *) OR (Connect 6---8)*
+(Connect 4---6 and *) OR (Connect 8---6)
+(Connect 15---10 and Connect 14---10 and *) OR (Connect 12---10)
+(Connect 14---10 and ) OR (Connect 11---10)*
+(Connect 3---7 and ) OR (Connect 6---7)*
+(Connect 14---13 and ) OR (Connect 12---13)*
+(Connect 14---13 and ) OR (Connect 11---13)*
+(Connect 15---10 and Connect 14---10 and *) OR (Connect 12---10)
+(Connect 14---10 and ) OR (Connect 11---10)*
+(Connect 5---8 and Connect 3---8 and *) OR (Connect 6---8)
+(Connect 5---8 and Connect 3---8 and ) OR (Connect 6---8)*
+(Connect 16---12 and *) OR (Connect 10---12)
+(Connect 5---8 and *) OR (Connect 9---8)
+(Connect 5---8 and Connect 3---8 and *) OR (Connect 6---8)*
+(Connect 3---9 and *) OR (Connect 6---9)
+(Connect 14---13 and ) OR (Connect 11---13)*
+(Connect 3---9 and *) OR (Connect 6---9)
+(Connect 16---12 and ) OR (Connect 11---12)*
+(Connect 16---12 and ) OR (Connect 10---12)*
+(Connect 7---10 and Connect 6---10 and ) OR (Connect 12---10)*
+(Connect 20---15 and Connect 19---15 and ) OR (Connect 16---15)*
+(Connect 7---10 and Connect 6---10 and *) OR (Connect 12---10)
+(Connect 7---10 and Connect 6---10 and *) OR (Connect 11---10)
+(Connect 19---14 and ) OR (Connect 16---14)*
+(Connect 20---15 and Connect 19---15 and ) OR (Connect 16---15)*
+(Connect 20---15 and Connect 18---15 and *) OR (Connect 14---15)*
+(Connect 9---12 and *) OR (Connect 11---12)
+(Connect 9---12 and Connect 8---12 and *) OR (Connect 10---12)
+(Connect 17---16 and *) OR (Connect 15---16)
+(Connect 18---16 and *) OR (Connect 14---16)
+(Connect 7---13 and *) OR (Connect 12---13)
+(Connect 9---13 and Connect 7---13 and *) OR (Connect 11---13)
+(Connect 19---14 and *) OR (Connect 16---14)
+(Connect 17---14 and ) OR (Connect 15---14)*
+(Connect 13---14 and Connect 10---14 and *) OR (Connect 16---14)
+(Connect 13---14 and ) OR (Connect 15---14)*
+(Connect 23---17 and Connect 21---17 and ) OR (Connect 18---17)*
+(Connect 11---15 and Connect 10---15 and *) OR (Connect 16---15)
+(Connect 11---15 and *) OR (Connect 14---15)
+(Connect 11---15 and Connect 10---15 and ) OR (Connect 16---15)*
+(Connect 22---19 and ) OR (Connect 17---19)*
+(Connect 11---15 and ) OR (Connect 14---15)*
+(Connect 24---18 and ) OR (Connect 17---18)*
+(Connect 12---16 and ) OR (Connect 14---16)*
+(Connect 24---18 and *) OR (Connect 20---18)
+(Connect 12---16 and ) OR (Connect 15---16)*
+(Connect 23---17 and Connect 21---17 and ) OR (Connect 19---17)*
+(Connect 16---17 and *) OR (Connect 19---17)
+(Connect 14---17 and ) OR (Connect 18---17)**
+(Connect 16---17 and *) OR (Connect 19---17)
+(Connect 14---17 and ) OR (Connect 18---17)***
+(Connect 16---18 and ) OR (Connect 20---18)*
+(Connect 15---18 and *) OR (Connect 17---18)*
+(Connect 15---19 and *) OR (Connect 17---19)
+G is not AT-Free*****
+G' is AT-Free
+InLAD

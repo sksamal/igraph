@@ -1,11 +1,43 @@
 
-Vertex connectivity=3
-(Connect 10---4 and ) OR (Connect 5---4)
-(Connect 10---7 and Connect 9---7 and ) OR (Connect 5---7)
-(Connect 9---7 and ) OR (Connect 4---7)
-(Connect 10---4 and ) OR (Connect 5---4)
-(Connect 3---4 and Connect 0---4 and ) OR (Connect 5---4)
-(Connect 2---7 and ) OR (Connect 5---7)
-(Connect 2---7 and ) OR (Connect 5---7)
-(Connect 2---7 and ) OR (Connect 4---7)
-G is not AT-Free
+Vertex connectivity=2****
+(Connect 11---8 and *) OR (Connect 6---8)****
+(Connect 4---8 and *) OR (Connect 6---8)
+(Connect 14---11 and ) OR (Connect 10---11)*
+(Connect 15---14 and ) OR (Connect 13---14)*
+(Connect 15---14 and *) OR (Connect 12---14)
+(Connect 17---12 and *) OR (Connect 14---12)
+(Connect 8---11 and *) OR (Connect 10---11)
+(Connect 15---14 and ) OR (Connect 13---14)*
+(Connect 10---12 and ) OR (Connect 14---12)*
+(Connect 20---17 and *) OR (Connect 15---17)**
+(Connect 11---14 and Connect 9---14 and *) OR (Connect 13---14)
+(Connect 9---14 and *) OR (Connect 12---14)
+(Connect 18---15 and ) OR (Connect 17---15)*
+(Connect 18---15 and *) OR (Connect 16---15)
+(Connect 14---15 and ) OR (Connect 17---15)*
+(Connect 14---15 and *) OR (Connect 16---15)
+(Connect 12---17 and ) OR (Connect 15---17)*
+G is not AT-Free********
+G' is AT-Free
+InLAD
+LAD Isomorphism: G is hamiltonianIn VF2
+VF2 Isomorphism: G is hamiltonian
+Level [minc,maxc] needc extra contr
+    0| [  2,  3]      1    -1     2
+    1| [  2,  3]      2     0     1
+    2| [  3,  3]      2    -1     1
+    3| [  1,  3]      2     1     1
+    4| [  1,  3]      2     1     1
+    5| [  2,  3]      2     0     1
+    6| [  2,  3]      1    -1     2
+J0:Graph is non-hamiltonian
+
+Level [minc,maxc] needc extra contr
+    0| [  2,  3]      1     0     2
+    1| [  2,  3]      2     0     0
+    2| [  3,  3]      2     0     1
+    3| [  1,  3]      2     1     0
+    4| [  1,  3]      2     1     1
+    5| [  2,  3]      2     0     1
+    6| [  2,  3]      1     0     2
+J1:Graph is hamiltonian

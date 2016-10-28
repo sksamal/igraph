@@ -1,75 +1,42 @@
 
 Vertex connectivity=3
-(Connect 10---7 and ) OR (Connect 5---7)
-(Connect 8---6 and ) OR (Connect 5---6)
-(Connect 11---5 and Connect 9---5 and ) OR (Connect 6---5)
-(Connect 2---5 and ) OR (Connect 6---5)
-(Connect 14---11 and ) OR (Connect 10---11)
-(Connect 14---11 and ) OR (Connect 8---11)
-(Connect 2---5 and ) OR (Connect 6---5)
-(Connect 14---9 and ) OR (Connect 8---9)
-(Connect 1---6 and ) OR (Connect 5---6)
-(Connect 13---8 and ) OR (Connect 11---8)
-(Connect 13---8 and ) OR (Connect 10---8)
-(Connect 14---11 and ) OR (Connect 8---11)
-(Connect 1---7 and ) OR (Connect 5---7)
-(Connect 12---10 and ) OR (Connect 8---10)
-(Connect 14---9 and ) OR (Connect 8---9)
-(Connect 6---8 and ) OR (Connect 11---8)
-(Connect 6---8 and ) OR (Connect 10---8)
-(Connect 7---9 and Connect 5---9 and ) OR (Connect 8---9)
-(Connect 20---14 and Connect 18---14 and Connect 17---14 and ) OR (Connect 12---14)
-(Connect 7---10 and ) OR (Connect 8---10)
-(Connect 19---12 and Connect 16---12 and Connect 15---12 and ) OR (Connect 14---12)
-(Connect 5---11 and ) OR (Connect 10---11)
-(Connect 7---11 and Connect 5---11 and ) OR (Connect 8---11)
-(Connect 20---14 and Connect 18---14 and Connect 17---14 and ) OR (Connect 12---14)
-(Connect 10---12 and ) OR (Connect 14---12)
-(Connect 24---19 and Connect 21---19 and ) OR (Connect 20---19)
-(Connect 23---19 and ) OR (Connect 18---19)
-(Connect 24---19 and Connect 21---19 and ) OR (Connect 17---19)
-(Connect 10---12 and ) OR (Connect 14---12)
-(Connect 24---16 and ) OR (Connect 20---16)
-(Connect 22---16 and ) OR (Connect 18---16)
-(Connect 24---16 and ) OR (Connect 17---16)
-(Connect 10---12 and ) OR (Connect 14---12)
-(Connect 24---15 and ) OR (Connect 17---15)
-(Connect 22---20 and ) OR (Connect 19---20)
-(Connect 23---20 and Connect 22---20 and ) OR (Connect 18---20)
-(Connect 22---17 and ) OR (Connect 19---17)
-(Connect 23---17 and Connect 22---17 and ) OR (Connect 18---17)
-(Connect 22---16 and ) OR (Connect 19---16)
-(Connect 22---16 and ) OR (Connect 18---16)
-(Connect 11---14 and Connect 9---14 and ) OR (Connect 12---14)
-(Connect 22---20 and ) OR (Connect 19---20)
-(Connect 23---20 and ) OR (Connect 16---20)
-(Connect 11---14 and Connect 9---14 and ) OR (Connect 12---14)
-(Connect 21---18 and ) OR (Connect 16---18)
-(Connect 21---18 and ) OR (Connect 15---18)
-(Connect 11---14 and Connect 9---14 and ) OR (Connect 12---14)
-(Connect 22---17 and ) OR (Connect 19---17)
-(Connect 23---17 and ) OR (Connect 16---17)
-(Connect 23---17 and Connect 22---17 and ) OR (Connect 15---17)
-(Connect 12---15 and ) OR (Connect 17---15)
-(Connect 12---16 and ) OR (Connect 20---16)
-(Connect 12---16 and ) OR (Connect 17---16)
-(Connect 13---16 and ) OR (Connect 19---16)
-(Connect 13---16 and Connect 12---16 and ) OR (Connect 18---16)
-(Connect 13---17 and ) OR (Connect 18---17)
-(Connect 14---17 and ) OR (Connect 16---17)
-(Connect 14---17 and ) OR (Connect 15---17)
-(Connect 14---17 and Connect 13---17 and ) OR (Connect 19---17)
-(Connect 13---17 and ) OR (Connect 18---17)
-(Connect 14---17 and ) OR (Connect 15---17)
-(Connect 14---18 and ) OR (Connect 16---18)
-(Connect 14---18 and ) OR (Connect 15---18)
-(Connect 12---19 and ) OR (Connect 20---19)
-(Connect 12---19 and ) OR (Connect 17---19)
-(Connect 12---19 and ) OR (Connect 18---19)
-(Connect 12---19 and ) OR (Connect 20---19)
-(Connect 12---19 and ) OR (Connect 17---19)
-(Connect 13---20 and ) OR (Connect 18---20)
-(Connect 14---20 and ) OR (Connect 16---20)
-(Connect 14---20 and Connect 13---20 and ) OR (Connect 19---20)
-(Connect 13---20 and ) OR (Connect 18---20)
+(Connect 8---4 and *) OR (Connect 5---4)
+(Connect 6---4 and ) OR (Connect 3---4)**
+(Connect 7---3 and ) OR (Connect 4---3)*
+(Connect 2---3 and ) OR (Connect 4---3)*
+(Connect 1---4 and *) OR (Connect 5---4)
+(Connect 1---4 and *) OR (Connect 3---4)
+(Connect 10---6 and ) OR (Connect 7---6)*
+(Connect 10---6 and ) OR (Connect 7---6)*
+(Connect 5---6 and Connect 4---6 and *) OR (Connect 7---6)*
+G is not AT-Free*
+G' is AT-Free
+LAD Isomorphism: G is hamiltonianIn VF2
+VF2 Isomorphism: G is hamiltonian
+Level [minc,maxc] needc extra contr
+    0| [  1,  3]      1     0     2
+    1| [  1,  3]      2     1     1
+    2| [  1,  3]      2     1     1
+    3| [  2,  3]      1    -1     2
+J0:Graph is hamiltonian
+Vertex connectivity=3
+(Connect 8---3 and *) OR (Connect 5---3)
+(Connect 8---3 and ) OR (Connect 4---3)*
+(Connect 2---3 and ) OR (Connect 5---3)*
+(Connect 2---3 and ) OR (Connect 4---3)*
 G is not AT-Free
+G' is AT-Free
+InLAD
+LAD Isomorphism: G is hamiltonianIn VF2
+VF2 Isomorphism: G is hamiltonian
+Level [minc,maxc] needc extra contr
+    0| [  2,  3]      1    -1     2
+    1| [  1,  3]      2     1     1
+    2| [  2,  3]      1    -1     2
+J0:Graph is non-hamiltonian
+
+Level [minc,maxc] needc extra contr
+    0| [  2,  3]      1     0     2
+    1| [  1,  3]      2     1     0
+    2| [  2,  3]      1    -1     2
+J1:Graph is hamiltonian
