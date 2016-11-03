@@ -1,4 +1,5 @@
 host=`hostname`;
+export JID=$2
 if [ "$host" == "localhost.localdomain" ] ; then
    make igraph_atfree $1 -f Makefile.localhost; 
 else
