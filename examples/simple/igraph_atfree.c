@@ -30,14 +30,15 @@ int main(int argc, char** argv) {
 	printf("\nUsage: %s <dotfile>",argv[0]);
 	exit(1);
    }
-  // l = number of levels, s = max size of each level (>=2)
-  int conns=3;
+  // l = number of levels, s = max size of each level (>=2) , conns = minimum connectivity
+  int conns=3;    
   int l=rand()%MLEVELS+conns,s=rand()%LSIZE+conns;  
   int loc[l];    // store start
   double scale=1.0;
   int count=0;
 
-
+  /* Randomly determine the size for every level 
+ *   loc[0] = second level starting vertex and so on  */
   for(int i=0;i<l;i++) {
 	count+= (s>conns)?(rand()%(s-conns)+conns):conns;
 	loc[i] = count;
@@ -48,12 +49,15 @@ int main(int argc, char** argv) {
   igraph_empty(&g, count, IGRAPH_UNDIRECTED);
   igraph_bool_t connected;
 
+  /* For every level, find the previous, current and next starting vertex */
   for(int i=0;i<l;i++) {
     int p = (i<=1)?0:loc[i-2];
     int c = (i>0)?loc[i-1]:0;
     int n = loc[i];
+
     for (int j=c;j<n;j++)  { /* Vertices in level i */ 
 
+     /* Get the left, right and current neighbors using our method */
      igraph_vector_t left,current,right;
      igraph_vector_init(&left,1);
      igraph_vector_init(&current,1);
@@ -61,8 +65,14 @@ int main(int argc, char** argv) {
      cutNeighbors(&g,j,loc,&left,&current,&right);
 //     igraph_bool_t backward = (i==0)?1:igraph_vector_size(&left)-1;
 //     igraph_bool_t forward = (i==l-1)?1:igraph_vector_size(&right)-1;
-     igraph_bool_t other = ((i==0)?1:igraph_vector_size(&left) -1) + ((i==l-1)?1:igraph_vector_size(&right) -1);
+//
+     /* other = does it have connections in other levels ? 
+      * conns = Get the existing connections for the vertex j */
+     igraph_bool_t other = ((i==0)?0:igraph_vector_size(&left) -1) + ((i==l-1)?0:igraph_vector_size(&right) -1);
      int cs = igraph_vector_size(&left)-1 + igraph_vector_size(&right) -1 + igraph_vector_size(&current)-1; 
+
+     /* We start adding edges in forward and backward directions alternately making sure, there is 
+      * atleast one left or right neighbor*/
      int dir=1;
      while(cs<conns || !other) {
 
@@ -83,6 +93,8 @@ int main(int argc, char** argv) {
 		other = 1;
 		}
 
+        /* Only after minimum requirement is satisfied, add edges in the same level,
+         * use a randomness of 1/3 */
 	int t=rand()%(3*(n-c));
 	if((cs>0) && (t < (n-c)) && (c+t!=j)) {
             igraph_are_connected(&g,j, c+t,&connected);
@@ -93,7 +105,7 @@ int main(int argc, char** argv) {
   }
   }
 
-/*  igraph_vector_t *neighs;
+/*  igraph_vector_t *neighs;               // neighbors example
   for(int i=0;i<igraph_vcount(&g);i++)
    {
      igraph_neighbors(&g,neighs,i,0);
@@ -105,10 +117,12 @@ int main(int argc, char** argv) {
   SETGAN(&g, "vertices", igraph_vcount(&g));
   SETGAN(&g, "edges", igraph_ecount(&g));
 //  SETGAB(&g, "famous", 1);
-//  igraph_simplify(&g,1,1,0);
+//  igraph_simplify(&g,1,1,0);   // removes cycles and edges
   igraph_integer_t result;
   igraph_vertex_connectivity(&g,&result,1);
   printf("\nVertex connectivity=%d",result);
+
+  /* Set the positions in .dot file */
   double off=0.1;
   for(int i=0;i<l;i++) {
     int o = (i==0)?0:loc[i-1];
@@ -124,12 +138,15 @@ int main(int argc, char** argv) {
 }
 }
 
+  /* Copy the graph to g1, check localATFree condition
+   *  and make it AT-Free if it is not already */
   igraph_t g1;
-  /* Check if AT-Free */
   igraph_vector_t left,current, right,fnn;
   igraph_bool_t isatfree=1;
   igraph_copy(&g1,&g);
 
+  /* For every vertex j, find the non-neighbors in adjacent levels 
+   * and apply the localATFree check */
   for(int j=0; j<loc[l-1];j++)
    {
       igraph_vector_init(&left,1);
@@ -152,6 +169,9 @@ int main(int argc, char** argv) {
  	printf("%d ",(int) VECTOR(fnn)[i]);	
       printf(")"); */
 //      printf("\n\t\t j=%d : left=%d curr=%d right=%d",j, igraph_vector_size(&left),igraph_vector_size(&current),igraph_vector_size(&right));
+
+    /*  For vertex j, is the local condition true ? , If not add edges
+     *  in graph g1, which was originally a copy og g */   
       isatfree = isatfree & isDominSatisfied(&g,j,loc,&fnn,&g1);
 
   igraph_vector_destroy(&left);
@@ -163,6 +183,8 @@ int main(int argc, char** argv) {
   if(isatfree) printf("\nG is AT-Free");
   else printf("\nG is not AT-Free");
 
+  /* Finally run the same test on vertices of g1 
+   * to make sure it is AT-Free */
   igraph_t g2;
   igraph_copy(&g2,&g1);
   int isatfree1=1;
@@ -173,8 +195,8 @@ int main(int argc, char** argv) {
   }
   if(isatfree1) printf("\nG' is AT-Free");
   else printf("\nG' is not AT-Free");
-  
-//  igraph_write_graph_graphml(&g, stdout, /*prefixattr=*/ 1);
+ 
+  /* Write g to the file specified in stdin */ 
   FILE *fp = fopen(argv[1],"w");
   char spos[680];
   sprintf(spos,"Graph=%s, AT-Free=%d",argv[1],isatfree);
@@ -182,7 +204,9 @@ int main(int argc, char** argv) {
   SETGAS(&g, "labelloc", "bottom");
   igraph_write_graph_dot(&g, fp);
   fclose(fp);
-  sprintf(spos,"m%s",argv[1]);
+ 
+  /* Write g1 to <m><file specified in stdin> */
+  sprintf(spos,"m%s",argv[1]);  
   fp = fopen(spos,"w");
   igraph_bool_t oiso=isHamiltonian(&g1,loc,l);
   sprintf(spos,"Graph=%s, ATFree=%d,OurAlgo=%d",argv[1],isatfree1,oiso);
@@ -191,7 +215,8 @@ int main(int argc, char** argv) {
   igraph_write_graph_dot(&g1, fp);
   fclose(fp);
 
-  /* Run the LAD and VFS isomorphism algorithms */
+  /* Run the LAD and VFS isomorphism algorithms 
+   *   present in igraph and if successful rewrite g1*/
   char path1[300], path2[300];
   path1[0]='\0';
   path2[0]='\0';
@@ -203,8 +228,6 @@ int main(int argc, char** argv) {
   sprintf(spos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",argv[1],isatfree1,oiso,iso1, path1,iso2, path2);
   SETGAS(&g1, "label", spos);
   SETGAS(&g, "labelloc", "bottom");
-   
-//  isHamUsingIsomorphism(&g1);
 //  SETGAS(&g, "labeljust", "left");
   igraph_write_graph_dot(&g1, fp);
   fclose(fp);
@@ -215,12 +238,14 @@ int main(int argc, char** argv) {
 }
 
 // dir=-1 means left, dir=0 current, dir=1 means right 
+/* Get the forward or backward or current neighbor based on the value of dir */
 void getNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *ne, int dir) {
       igraph_vector_t left,current,right;
       igraph_vector_init(&left,1);
       igraph_vector_init(&current,1);
       igraph_vector_init(&right,1);
 
+      /* Based on dir, update vector ne and return */
       if(dir>0) cutNeighbors(g,j,loc,&left,&current,ne);
       if(dir<0) cutNeighbors(g,j,loc,ne,&current,&right);
       else cutNeighbors(g,j,loc,&left,ne,&right); 
@@ -230,6 +255,8 @@ void getNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *ne, int dir) {
       igraph_vector_destroy(&right);
 }
 
+/* This method cuts the neighbors of a vertex v into left, right and current neighbors
+ * based on the grid-labelling scheme */
 void cutNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni) {
 
    /* Get all neighbours */
@@ -246,10 +273,12 @@ void cutNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *bni, igraph_vec
    int i=0;
    while(j>=loc[i]) i++;
 
+   /* Find the first vertex in backward (b), current(c) and next(n) level */
    int b=(i==0)?-999:((i==1)?0:loc[i-2]);
    int c=(i==0)?0:loc[i-1];
    int n=loc[i];
 
+  /* For every neighbor, based on its position, put it in appropriate neighbor vector */
   for (int k=0; k<igraph_vector_size(&ni); k++) {
     int w = (int) VECTOR(ni)[k];
 //    printf("\nj=%d :: i=%d, k=%d, w=%d, b=%d, c=%d, n=%d", j, i, k, w, b, c, n);
@@ -268,11 +297,16 @@ void cutNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *bni, igraph_vec
 
 }
 
+/* This method finds all non-neighbors of a vertex j (in level i) in it's next level (i+1)
+ * returns them in a vector*/
 void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *fnn) {
 
+   /* First find j's level */
    int i=0;
    while(j>=loc[i]) i++;
    if(i==locsize-1) return ;
+
+   /* For every vertex in next level, if they are not connected add it in the vector */
    igraph_bool_t connected;
    for(int k=loc[i]; k<loc[i+1];k++) {
       igraph_are_connected(g,j,k,&connected);
@@ -282,6 +316,11 @@ void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vecto
    igraph_vector_resize_min(fnn);
 }
 
+/* This method checks the local AT-Free condition in both the directions. Returns a 
+ * true if the localcheck worked, else adds edges in g1 (which is essentially a copy of g)
+ * to satisfy the local checkadds edges in g1 (which is essentially a copy of g)
+ * to satisfy the local check . It takes j and it's forward non-neighbors as
+ * input */
 igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1) {
 
    igraph_bool_t connected, atfree, isatfree=1;
@@ -308,6 +347,8 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
    		igraph_vector_init(&kcni, 1);
    		igraph_vector_init(&knni, 1);
 		cutNeighbors(g,v,loc,&kbni,&kcni,&knni);
+		/*Randomly decide if we need to add edges (u,j) 
+                 *for all u with backward neighbors  */
 		igraph_bool_t shallAdd = rand()%2;
 		for (int l=0; l<igraph_vector_size(&kbni)-1; l++) {
 		  int u = (int) VECTOR(kbni)[l];
@@ -321,6 +362,8 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  }
 	        }
 		if(shallAdd) printf("*");
+                /* If not atfree, and edges are not added to backward neighbors earlier,
+                 * add edge (v,j) in g1 */ 
 		if(!atfree) {
 		  printf(") OR (Connect %d---%d)",v,j);
 		  igraph_are_connected(g1,v,j,&connected);
@@ -339,7 +382,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 
 
 	/* Do the exact same thing with j in forward direction */
-   	/* Find forward neighbors of j */
+   	/* Find forward non-neighbors of j */
    	igraph_vector_t jbni,jcni,jnni;
    	igraph_vector_init(&jbni, 1);
    	igraph_vector_init(&jcni, 1);
@@ -361,6 +404,8 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
    		igraph_vector_init(&kcni, 1);
    		igraph_vector_init(&knni, 1);
 		cutNeighbors(g,v,loc,&kbni,&kcni,&knni);
+		/* Randomly decide where to add edge at (v,j) or 
+                 * for all u at (u,j) */ 	
 		igraph_bool_t shallAdd = rand()%2;
 		for (int l=0; l<igraph_vector_size(&knni)-1; l++) {
 		  int u = (int) VECTOR(knni)[l];
@@ -394,11 +439,13 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
   return isatfree;		
 }
 
+/* Uses igraph LAD algorithm to return a hampath 
+ * if it exists  timesout after 180 seconds*/
 void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path) {
   igraph_t ring;
-//  igraph_bool_t iso;
   igraph_vector_t map;
   igraph_vector_init(&map,0);
+  /* Create a cycle with same number of vertices as g */
   igraph_ring(&ring, igraph_vcount(g), /*directed=*/ 0, /*mutual=*/ 0, /*circular=*/1);
   printf("\nInLAD");
   igraph_subisomorphic_lad(&ring, g, NULL, iso, &map,NULL, /* induced = */ 0, 180);
@@ -413,11 +460,13 @@ void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path) {
   igraph_destroy(&ring);
 }
 
+/* Uses igraph VF2 algorithm to return a hampath if 
+ * possible */
 void isHamUsingVF2(igraph_t *g, igraph_bool_t *iso,char *path) {
   igraph_t ring;
-//  igraph_bool_t iso;
   igraph_vector_t map;
   igraph_vector_init(&map,0);
+  /* Create a cycle with same number of vertices as g */
   igraph_ring(&ring, igraph_vcount(g), /*directed=*/ 0, /*mutual=*/ 0, /*circular=*/1);
   printf("In VF2");
   igraph_subisomorphic_vf2(g, &ring, NULL, NULL, NULL, NULL, iso, &map,NULL,NULL,NULL,NULL);
@@ -431,13 +480,20 @@ void isHamUsingVF2(igraph_t *g, igraph_bool_t *iso,char *path) {
   igraph_vector_destroy(&map);
   igraph_destroy(&ring);
 }
-/* Our algorithm for Hamiltonian */
+
+/* Our algorithm for necessay condition of Hamiltonian cycle in ATFree graph
+ * */
 igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 
    int start = 0, totextra=0;;
    int contr[locsize], needc[locsize], extra[locsize], maxc[locsize], minc[locsize];
    int isHamiltonian = 1;
    printf("\nLevel [minc,maxc] needc extra contr");
+
+   /* Calculate max-compoments (maxc), min-compoments(minc), extra/deficit (extra) of number
+    * of vertices and amount it can contribute to the adjacent levels(contr) 
+    * J0: In this loop, we check if condition is satisfied, without having to contribute
+    * to its neighbors (simple hamiltonian)*/ 
    for(int l=0;l<locsize;l++) {
 	maxc[l] = loc[l]-start;  /* Maximum contribution or number of vertices in the elvel */
         minc[l] =0;
@@ -461,21 +517,24 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 	   igraph_vector_destroy(&snei);
 	}
 
+       /* Simple hamiltonian condition, 122..221 */
        if(l==0 || l==locsize-1) needc[l]=1;
        else needc[l]=2;
 
-       if(needc[l]>maxc[l]) isHamiltonian = 0;
+       if(needc[l]>maxc[l]) isHamiltonian = 0;  /*Flag if need is more than max it can contribute */
        extra[l]=(needc[l]-minc[l]);
        contr[l]=(maxc[l]-needc[l]);
        //printf("\nLevel [minc,maxc] needc extra contr");
        printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
        start = loc[l];
        totextra+=extra[l];
-//       off+=(size-cc-2);
    }
-	if(!isHamiltonian || totextra<0) printf("\nJ0:Graph is non-hamiltonian");
-	else { printf("\nJ0:Graph is hamiltonian"); return 1; }
+	/* If all needs are met, a simple HamCycle exists and return  else continue*/
+	if(!isHamiltonian || totextra<0) printf("\nJ0[Simple]:Graph is non-hamiltonian");
+	else { printf("\nJ0[Simple]:Graph is hamiltonian"); return 1; }
 
+	/* Search for complex hamcycle conditions, i.e when needs can be satisfied using
+           its neighbors */ 
 	totextra=0; isHamiltonian=1;
    	printf("\n\nLevel [minc,maxc] needc extra contr");
    	for(int l=0;l<locsize;l++) {
@@ -489,9 +548,10 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 	        totextra+=extra[l];
 		isHamiltonian = isHamiltonian && (totextra>=0);
 	 }
-			
-	if(!isHamiltonian) printf("\nJ1:Graph is non-hamiltonian");
-	else printf("\nJ1:Graph is hamiltonian");
+	
+	/* If a complex hamcycle exists, return true */	
+	if(!isHamiltonian) printf("\nJ1[Complex]:Graph is non-hamiltonian");
+	else printf("\nJ1[Complex]:Graph is hamiltonian");
   
 	printf("\nNumber of vertices(l0 to l%d):",locsize-1);	
 	for(int l=0;l<locsize;l++) 		   
