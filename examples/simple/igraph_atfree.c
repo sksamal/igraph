@@ -179,13 +179,23 @@ int main(int argc, char** argv) {
   fclose(fp);
   sprintf(spos,"m%s",argv[1]);
   fp = fopen(spos,"w");
+  igraph_bool_t oiso=isHamiltonian(&g1,loc,l);
+  sprintf(spos,"Graph=%s, ATFree=%d,OurAlgo=%d",argv[1],isatfree1,oiso);
+  SETGAS(&g1, "label", spos);
+  SETGAS(&g, "labelloc", "bottom");
+  igraph_write_graph_dot(&g1, fp);
+  fclose(fp);
+
+  /* Run the LAD and VFS isomorphism algorithms */
   char path1[300], path2[300];
   path1[0]='\0';
   path2[0]='\0';
   igraph_bool_t iso1=0, iso2=0;
   isHamUsingLAD(&g1,&iso1, path1);
   isHamUsingVF2(&g1,&iso2, path2);
-  sprintf(spos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",argv[1],isatfree1,isHamiltonian(&g1,loc,l),iso1, path1,iso2, path2);
+  sprintf(spos,"m%s",argv[1]);
+  fp = fopen(spos,"w");
+  sprintf(spos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",argv[1],isatfree1,oiso,iso1, path1,iso2, path2);
   SETGAS(&g1, "label", spos);
   SETGAS(&g, "labelloc", "bottom");
    
@@ -386,7 +396,7 @@ void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path) {
   igraph_vector_init(&map,0);
   igraph_ring(&ring, igraph_vcount(g), /*directed=*/ 0, /*mutual=*/ 0, /*circular=*/1);
   printf("\nInLAD");
-  igraph_subisomorphic_lad(&ring, g, NULL, iso, &map,NULL, /* induced = */ 0, 30);
+  igraph_subisomorphic_lad(&ring, g, NULL, iso, &map,NULL, /* induced = */ 0, 180);
   if (!(*iso)) printf("\nLAD Isomorphism:G is non-hamiltonian");
   else { 
 	printf("\nLAD Isomorphism: G is hamiltonian");
@@ -461,7 +471,7 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 	if(!isHamiltonian || totextra<0) printf("\nJ0:Graph is non-hamiltonian");
 	else { printf("\nJ0:Graph is hamiltonian"); return 1; }
 
-	totextra=0;
+	totextra=0; isHamiltonian=1;
    	printf("\n\nLevel [minc,maxc] needc extra contr");
    	for(int l=0;l<locsize;l++) {
 		if(l!=0)  
@@ -472,10 +482,14 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 			{ extra[l]++; contr[l+1]--; }
        		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
 	        totextra+=extra[l];
+		isHamiltonian = isHamiltonian && (totextra>=0);
 	 }
 			
-	if(!isHamiltonian || totextra<0) printf("\nJ1:Graph is non-hamiltonian");
+	if(!isHamiltonian) printf("\nJ1:Graph is non-hamiltonian");
 	else printf("\nJ1:Graph is hamiltonian");
-	   
-	return (isHamiltonian && totextra>=0);
+  
+	printf("\nNumber of vertices(l0 to l%d):",locsize-1);	
+	for(int l=0;l<locsize;l++) 		   
+	 printf("%d ",extra[l]); 
+	return isHamiltonian;
 }
