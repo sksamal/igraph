@@ -1,8 +1,12 @@
-/* -*- mode: C -*-  */
+/* -*- mode: C -*-  
+ * Nov 1, 2016: Fix for there can be some vertices, that are connected to 
+ *  		one side at a minimum (min requirement is no longer 2, just 1)
+ *
+ * */
 
 #include <igraph.h>
 #define MLEVELS 7
-#define LSIZE 4 
+#define LSIZE 7 
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
 igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1);
 void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *fnn);
@@ -55,19 +59,20 @@ int main(int argc, char** argv) {
      igraph_vector_init(&current,1);
      igraph_vector_init(&right,1);
      cutNeighbors(&g,j,loc,&left,&current,&right);
-     igraph_bool_t backward = (i==0)?1:igraph_vector_size(&left)-1;
-     igraph_bool_t forward = (i==l-1)?1:igraph_vector_size(&right)-1;
+//     igraph_bool_t backward = (i==0)?1:igraph_vector_size(&left)-1;
+//     igraph_bool_t forward = (i==l-1)?1:igraph_vector_size(&right)-1;
+     igraph_bool_t other = ((i==0)?1:igraph_vector_size(&left) -1) + ((i==l-1)?1:igraph_vector_size(&right) -1);
      int cs = igraph_vector_size(&left)-1 + igraph_vector_size(&right) -1 + igraph_vector_size(&current)-1; 
      int dir=1;
-     while(cs<conns || !backward || !forward) {
+     while(cs<conns || !other) {
 
-    	if((i!=0) && (i==l-1 || dir==0)) { 
+    	if((i!=0) && (i==l-1 || dir==0)) 	{ 
 		int rb = rand()%(loc[i-1]-p); 
 		igraph_are_connected(&g,j, p+rb,&connected);
 //		printf("Back: i=%d,cs=%d,isconn=%d,rb=%d,size=%d\n",i, cs, connected,rb,loc[i-1]-p);
 		if(!connected)
 		     { igraph_add_edge(&g,j,p+rb); dir=1; cs++; }
-		backward = 1;
+		other = 1;
 		}
 	if((i!=l-1) && (i==0 || dir==1)) 	{
 		int rf = rand()%(loc[i+1]-n); 
@@ -75,11 +80,11 @@ int main(int argc, char** argv) {
 //		printf("Forward: i=%d,cs=%d,isconn=%d,rb=%d,size=%d\n",i, cs, connected,rf,loc[i+1]-n);
 		if(!connected)
 		   { igraph_add_edge(&g,j,n+rf); dir=0; cs++; } 
-		forward = 1;
+		other = 1;
 		}
 
 	int t=rand()%(3*(n-c));
-	if((cs>1) && (t < (n-c)) && (c+t!=j)) {
+	if((cs>0) && (t < (n-c)) && (c+t!=j)) {
             igraph_are_connected(&g,j, c+t,&connected);
 	    if(!connected)
 	      { igraph_add_edge(&g,j,c+t); cs++; } 
