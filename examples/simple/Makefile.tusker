@@ -36,11 +36,11 @@ runat: igraph_atfree
 	for a in `seq 1 100` ; do \
 	sleep 3; \
 	timeout 5m ./igraph_atfree aa$$a.dot > aa$$a.txt;\
-	#dot -Kfdp -n aa$$a.dot -Tpdf > aa$$a.pdf; \
-	#dot -Kfdp -n maa$$a.dot -Tpdf > maa$$a.pdf; \
-	#scp aa$$a.dot maa$$a.dot aa$$a.pdf maa$$a.pdf aa$$a.txt ssamal@cse.unl.edu:~/igraph/$$JID; 
-	scp aa$$a.dot maa$$a.dot aa$$a.txt ssamal@cse.unl.edu:~/igraph/$$JID; \
+	scp aa$$a.dot maa$$a.dot aa$$a.txt ssamal@cse.unl.edu:~/igraph/$$JID;\
 done
+#dot -Kfdp -n aa$$a.dot -Tpdf > aa$$a.pdf; \
+#dot -Kfdp -n maa$$a.dot -Tpdf > maa$$a.pdf; \
+#scp aa$$a.dot maa$$a.dot aa$$a.pdf maa$$a.pdf aa$$a.txt ssamal@cse.unl.edu:~/igraph/$$JID; 
 run: igraph_atfree
 	./igraph_atfree aa.dot > aa.txt; \
 	dot -Kfdp -n aa.dot -Tpdf >aa.pdf; \

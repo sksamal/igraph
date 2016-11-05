@@ -557,4 +557,5 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 	for(int l=0;l<locsize;l++) 		   
 	 printf("%d ",extra[l]); 
 	return isHamiltonian;
+
 }
