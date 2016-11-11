@@ -5,6 +5,7 @@
  * */
 
 #include <igraph.h>
+#include <string.h>
 #include "igraph_atfree.h"
 
 void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1);
@@ -49,15 +50,16 @@ int main(int argc, char** argv) {
   int loc[dia+1];
 
   /* Calculate dominating pair set */
-  igraph_vector_t X,Y,label;
-  igraph_vector_init(&label,n);
+  igraph_vector_t X,Y,label1,label2;
+  igraph_vector_init(&label1,n);
+  igraph_vector_init(&label2,n);
   igraph_vector_init(&X,1);
   igraph_vector_init(&Y,1);
   VECTOR(Y)[0] = rand()%n;
   
-  LBFS(&g,&Y,&X,&label);
+  LBFS(&g,&Y,&X,&label1);
+  LBFS(&g,&X,&Y,&label2);
   exit(1);
-//  LBFS(&g,Y);
   igraph_t g1;
   igraph_empty(&g1, n, IGRAPH_UNDIRECTED);
   igraph_copy(&g1,&g);
@@ -117,32 +119,47 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
 
    /* Starting label */ 
    int n = igraph_vcount(g);
-   igraph_vector_t llabel;
-   igraph_vector_init(&llabel, n);
+   igraph_strvector_t llabel;
+   igraph_strvector_init(&llabel, n);
+   for(int i=0;i<igraph_vector_size(vstart);i++)
+      igraph_strvector_set(&llabel,i,"000");
+ 
+   char strlabel[100];
+   sprintf(strlabel,"%3d",n+1);
 
-   int v = VECTOR(*vstart)[0];
-   /* Set lexlabel of v as -1 */
-   VECTOR(llabel)[v] = 1;
-   /* Assign n to max lexlabel */
-//   VECTOR(*label)[v] = n;
-   
+   for(int i=0;i<igraph_vector_size(vstart);i++) {
+   	int v = VECTOR(*vstart)[i];
+   	/* Set lexlabel of v as some positive number */
+   	igraph_strvector_set(&llabel,v,strlabel);
+     } 
+
    while(n>0) {
 
 	/* Find the maximum and its index */
 	int maxes = 1, maxValue=0, maxIndex=0;
-	for(int i=0;i<igraph_vector_size(&llabel);i++) {
-	    if(maxValue==(int)VECTOR(llabel)[i]) maxes++;
-	    if(maxValue<(int)VECTOR(llabel)[i]) 
-	      { maxes=1;maxValue=(int)VECTOR(llabel)[i]; maxIndex=i; }
+	char maxlabel[100];
+	maxlabel[0] = '\0';
+	for(int i=0;i<igraph_strvector_size(&llabel);i++) {
+	    //if(maxValue==(int)VECTOR(llabel)[i]) maxes++;
+	    char *tmplabel;
+ 	    igraph_strvector_get(&llabel,i,&tmplabel);
+	    if(strcmp(maxlabel,tmplabel)==0) maxes++;
+	  //  if(maxValue<(int)VECTOR(llabel)[i]) 
+	    if(strcmp(maxlabel,tmplabel)<0)
+//	      { maxes=1;maxValue=(int)VECTOR(llabel)[i]; maxIndex=i; }
+	      { maxes=1; strcpy(maxlabel,tmplabel); maxIndex=i; }
 	}
      
 	/* Assign label of the maxes and set their llabels to -1 */ 
-	for(int i=0;i<igraph_vector_size(&llabel);i++) {
-	    if(maxValue==(int)VECTOR(llabel)[i]) {
+	for(int i=0;i<igraph_strvector_size(&llabel);i++) {
+//	    if(maxValue==(int)VECTOR(llabel)[i]) {
+	    char *tmplabel;
+ 	    igraph_strvector_get(&llabel,i,&tmplabel);
+	    if(strcmp(maxlabel,tmplabel)==0) {
  		VECTOR(*label)[i] = n-maxes+1;
-		VECTOR(llabel)[i] = -1;
-		v=i;
-                printf("\nn=%d,maxes=%d, v=%d, label(v)=%d, maxIndex=%d, maxValue=%d",n-maxes+1,maxes,v,(int)VECTOR(*label)[v],i,maxValue);
+	//	VECTOR(llabel)[i] = -1;
+   		igraph_strvector_set(&llabel,i,"\0");
+                printf("\nn=%d,maxes=%d, v=%d, label(v)=%d, maxIndex=%d, maxlabel=%s",n-maxes+1,maxes,i,(int)VECTOR(*label)[i],i,maxlabel);
 	    }
 	}
 	n=n-maxes; 
@@ -156,10 +173,16 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
    		igraph_neighbors(g,&ni,i,IGRAPH_ALL);
 
 		/* Propagate lexlabels */
-        	for(int j=0;j<n;j++) {
+        	for(int j=0;j<igraph_vector_size(&ni);j++) {
           	   int u = (int) VECTOR(ni)[j];
-	  	   if((int)VECTOR(llabel)[u] >= 0)  /* If not labelled */
-		      VECTOR(llabel)[u]+= (int)VECTOR(*label)[i] ;
+//	  	   if((int)VECTOR(llabel)[u] >= 0)  /* If not labelled */
+	    	   char *tmplabel, newlabel[100];
+ 	    	   igraph_strvector_get(&llabel,u,&tmplabel);
+		   if(strcmp(tmplabel,"\0")>0) {
+		      sprintf(newlabel,"%s,%3d",tmplabel,(int)VECTOR(*label)[i]);	
+ 	    	      igraph_strvector_set(&llabel,u,newlabel);
+		    //  VECTOR(llabel)[u]+= (int)VECTOR(*label)[i] ;
+		   }
        		}
        		igraph_vector_destroy(&ni);
 	     }
@@ -170,13 +193,16 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
      printf("\n  LLabels are: ");
      for(int i=0;i<igraph_vector_size(&llabel);i++)  
 	printf("(%d):%d",i,(int)VECTOR(llabel)[i]); */
-       v = maxIndex;
+//       v = maxIndex; 
    }
    
-      
-     for(int i=0;i<igraph_vector_size(label);i++)  
+     for(int i=0;i<igraph_vector_size(label);i++) { 
 	printf("\nLabel of (%d): %d",i,(int)VECTOR(*label)[i]);
-     igraph_vector_destroy(&llabel);
+	if((int)VECTOR(*label)[i]==1)
+	  igraph_vector_insert(X,0,i);
+	}
+//     igraph_vector_destroy(&llabel);
+       igraph_strvector_destroy(&llabel);
 }
 
 void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1) {
