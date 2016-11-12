@@ -42,3 +42,7 @@
 *.su
 *.idb
 *.pdb
+
+#graphviz files
+#*.dot
+#*.pdf

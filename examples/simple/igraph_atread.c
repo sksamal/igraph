@@ -121,18 +121,28 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
    int n = igraph_vcount(g);
    igraph_strvector_t llabel;
    igraph_strvector_init(&llabel, n);
-   for(int i=0;i<igraph_vector_size(vstart);i++)
-      igraph_strvector_set(&llabel,i,"000");
+   for(int i=0;i<igraph_strvector_size(&llabel);i++) {
+      char *tmpstr="000";
+      igraph_strvector_set(&llabel,i,tmpstr);
+   }
  
-   char strlabel[100];
-   sprintf(strlabel,"%3d",n+1);
-
    for(int i=0;i<igraph_vector_size(vstart);i++) {
+   	char strlabel[100];
+	if(n+1<10)	  sprintf(strlabel,"00%d",n+1);
+	else if(n+1<100)  sprintf(strlabel,"0%d",n+1);
+	else if(n+1<1000) sprintf(strlabel,"%d",n+1);
    	int v = VECTOR(*vstart)[i];
    	/* Set lexlabel of v as some positive number */
    	igraph_strvector_set(&llabel,v,strlabel);
+//	printf("v=%d",v);
      } 
 
+  /*   printf("\n LLabels are: ");
+     for(int i=0;i<igraph_strvector_size(&llabel);i++) { 
+	char *tmplabel;
+ 	igraph_strvector_get(&llabel,i,&tmplabel);
+	printf("(%d):%s",i,tmplabel); 
+     } */
    while(n>0) {
 
 	/* Find the maximum and its index */
@@ -179,7 +189,10 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
 	    	   char *tmplabel, newlabel[100];
  	    	   igraph_strvector_get(&llabel,u,&tmplabel);
 		   if(strcmp(tmplabel,"\0")>0) {
-		      sprintf(newlabel,"%s,%3d",tmplabel,(int)VECTOR(*label)[i]);	
+			int v = (int)VECTOR(*label)[i];
+			if(v<10)	sprintf(newlabel,"%s,00%d",tmplabel,v);
+			else if(v<100)  sprintf(newlabel,"%s,0%d",tmplabel,v);
+			else if(v<1000) sprintf(newlabel,"%s,%d",tmplabel,v);
  	    	      igraph_strvector_set(&llabel,u,newlabel);
 		    //  VECTOR(llabel)[u]+= (int)VECTOR(*label)[i] ;
 		   }
@@ -191,8 +204,11 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
      for(int i=0;i<igraph_vector_size(label);i++)  
 	printf("(%d):%d",i,(int)VECTOR(*label)[i]);
      printf("\n  LLabels are: ");
-     for(int i=0;i<igraph_vector_size(&llabel);i++)  
-	printf("(%d):%d",i,(int)VECTOR(llabel)[i]); */
+     for(int i=0;i<igraph_strvector_size(&llabel);i++) { 
+	char *tmplabel;
+ 	igraph_strvector_get(&llabel,i,&tmplabel);
+	printf("(%d):%s",i,tmplabel); 
+     } */
 //       v = maxIndex; 
    }
    
