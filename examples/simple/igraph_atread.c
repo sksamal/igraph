@@ -66,18 +66,23 @@ int main(int argc, char** argv) {
 //  sprintf(sspos,"Graph=%s, AT-Free=%d",sname,0);
 //  exportToDot(&g,loc,dia+1,NULL,sname,sspos);
   LBFS(&g,&Y,&X,&label1,&map1);
-  OrderGrid(&g,loc,dia,&X);
+  printf("\n Y="); igraph_vector_print(&Y);
+  printf(" X="); igraph_vector_print(&X);
+  OrderGrid(&g,loc,dia+1,&X);
   sprintf(sname,"lbfs1-%s",argv[1]);  
   sprintf(sspos,"Graph=%s, AT-Free=%d",sname,0);
   printf("\n Loc=");
-  for(int i=0;i<dia;i++) printf(" %d ",loc[i]);
+  for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
   exportToDot(&g,loc,dia+1,&map1,sname,sspos);
+  igraph_vector_clear(&Y);
   LBFS(&g,&X,&Y,&label2,&map2);
-  OrderGrid(&g,loc,dia,&Y);
+  printf("\n X="); igraph_vector_print(&X);
+  printf(" Y="); igraph_vector_print(&Y);
+  OrderGrid(&g,loc,dia+1,&Y);
   sprintf(sname,"lbfs2-%s",argv[1]);  
   sprintf(sspos,"Graph=%s, AT-Free=%d",sname,0);
   printf("\n Loc=");
-  for(int i=0;i<dia;i++) printf(" %d ",loc[i]);
+  for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
   exportToDot(&g,loc,dia+1,&map2,sname,sspos);
  
  /* Copy the graph to g1, check ATFree condition
@@ -139,6 +144,7 @@ int main(int argc, char** argv) {
   return 0;
 }
 
+/* Size or l = number of levels */
 void OrderGrid(igraph_t *g, int *loc, int size, igraph_vector_t *X) {
 
 	igraph_vector_t vlevel;
@@ -148,6 +154,7 @@ void OrderGrid(igraph_t *g, int *loc, int size, igraph_vector_t *X) {
  	igraph_bool_t visited[n];	
 	for(int i=0;i<n;i++) visited[i]=0;
 
+	printf("\n");
 	for(int i=0;i<size;i++)
 	 {
 	   igraph_vs_t vs;
@@ -155,7 +162,7 @@ void OrderGrid(igraph_t *g, int *loc, int size, igraph_vector_t *X) {
 
 	   igraph_vector_ptr_t res;
 	   igraph_vector_ptr_init(&res,0);
-	   printf("\nVlevel=");igraph_vector_print(&vlevel);
+	   printf("i=%d, Vlevel=",i);igraph_vector_print(&vlevel);
 	   for(int j=0;j<igraph_vector_size(&vlevel);j++)
 	      {
 		int v = VECTOR(vlevel)[j];
@@ -181,7 +188,7 @@ void OrderGrid(igraph_t *g, int *loc, int size, igraph_vector_t *X) {
 		igraph_free(v);
 	   }
 
-	   printf(" N(Vlevel)=");igraph_vector_print(&vlevel);
+//	   printf(" N(Vlevel)=");igraph_vector_print(&vlevel);
 	   igraph_vs_destroy(&vs);
 	   igraph_vector_ptr_destroy(&res);
 	 }
@@ -240,7 +247,7 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
  	    igraph_strvector_get(&llabel,i,&tmplabel);
 	    if(strcmp(maxlabel,tmplabel)==0) {
  		VECTOR(*label)[i] = n-maxes+1;
-		VECTOR(*map)[i] = m++;
+		VECTOR(*map)[m++] = i;
    		igraph_strvector_set(&llabel,i,"\0");
    //             printf("\nn=%d,maxes=%d, v=%d, label(v)=%d, maxIndex=%d, maxlabel=%s",n-maxes+1,maxes,i,(int)VECTOR(*label)[i],i,maxlabel);
 	    }
@@ -288,11 +295,10 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
    }
    
      for(int i=0;i<igraph_vector_size(label);i++) { 
-	printf("\nLabel of (%d): %d, Map : %d",i,(int)VECTOR(*label)[i],(int)VECTOR(*map)[i]);
+//	printf("\nLabel of (%d): %d, Map : %d",i,(int)VECTOR(*label)[i],(int)VECTOR(*map)[i]);
 	if((int)VECTOR(*label)[i]==1)
 	  igraph_vector_insert(X,0,i);
-	}
-//     igraph_vector_destroy(&llabel);
+	} 
        igraph_strvector_destroy(&llabel);
 }
 
@@ -323,13 +329,14 @@ void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g
    }
 }
 
+/* Note: l= number of levels */
 void exportToDot(igraph_t *g, int *loc, int l, igraph_vector_t *map, char *filename, char *text) {
 
-  int scale=1.0;
+  double scale=1.0;
   /* Find max size of a level */
   int s=loc[0];
   for(int i=1;i<l;i++)
-    if(s>loc[i]-loc[i-1]) s = loc[i]-loc[i-1];
+    if(s<loc[i]-loc[i-1]) s = loc[i]-loc[i-1];
 
   /* Set the positions in .dot file */
   double off=0.1;
@@ -341,6 +348,7 @@ void exportToDot(igraph_t *g, int *loc, int l, igraph_vector_t *map, char *filen
 	else 		v = j;
   	char spos[8];
   	int low = (s-(loc[i]-o))/2;
+//	printf("\n\tj=%d, low=%d, loc[i]=%d, o=%d, scale=%f",j,low,loc[i],o,scale);
  	// SETVAS(&g, "fixedsize",j,"true");
   	sprintf(spos,"%f,%f!",i*scale-((j-o)%2)*off,(j-o+low)*scale);
  	SETVAS(g, "pos",v,spos);
