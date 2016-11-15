@@ -46,3 +46,6 @@ run: igraph_atfree
 	dot -Kfdp -n aa.dot -Tpdf >aa.pdf; \
 	dot -Kfdp -n maa.dot -Tpdf >maa.pdf; \
 	scp aa.dot maa.dot aa.pdf maa.pdf aa.txt ssamal@cse.unl.edu:~/igraph/$$JID;
+read: igraph_atread
+	timeout 5m ./igraph_atread aa.dot > aa.txt; \
+	scp aa.dot aa.txt at-aa.dot hat-aa.dot lbfs1-aa.dot lbfs2-aa.dot ssamal@cse.unl.edu:~/igraph/$$JID;

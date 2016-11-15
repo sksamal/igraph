@@ -66,14 +66,18 @@ int main(int argc, char** argv) {
 //  sprintf(sspos,"Graph=%s, AT-Free=%d",sname,0);
 //  exportToDot(&g,loc,dia+1,NULL,sname,sspos);
   LBFS(&g,&Y,&X,&label1,&map1);
-  OrderGrid(&g,loc,dia+1,&X);
+  OrderGrid(&g,loc,dia,&X);
   sprintf(sname,"lbfs1-%s",argv[1]);  
   sprintf(sspos,"Graph=%s, AT-Free=%d",sname,0);
+  printf("\n Loc=");
+  for(int i=0;i<dia;i++) printf(" %d ",loc[i]);
   exportToDot(&g,loc,dia+1,&map1,sname,sspos);
   LBFS(&g,&X,&Y,&label2,&map2);
-  OrderGrid(&g,loc,dia+1,&Y);
+  OrderGrid(&g,loc,dia,&Y);
   sprintf(sname,"lbfs2-%s",argv[1]);  
   sprintf(sspos,"Graph=%s, AT-Free=%d",sname,0);
+  printf("\n Loc=");
+  for(int i=0;i<dia;i++) printf(" %d ",loc[i]);
   exportToDot(&g,loc,dia+1,&map2,sname,sspos);
  
  /* Copy the graph to g1, check ATFree condition
@@ -238,7 +242,7 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
  		VECTOR(*label)[i] = n-maxes+1;
 		VECTOR(*map)[i] = m++;
    		igraph_strvector_set(&llabel,i,"\0");
-                printf("\nn=%d,maxes=%d, v=%d, label(v)=%d, maxIndex=%d, maxlabel=%s",n-maxes+1,maxes,i,(int)VECTOR(*label)[i],i,maxlabel);
+   //             printf("\nn=%d,maxes=%d, v=%d, label(v)=%d, maxIndex=%d, maxlabel=%s",n-maxes+1,maxes,i,(int)VECTOR(*label)[i],i,maxlabel);
 	    }
 	}
 	n=n-maxes; 
