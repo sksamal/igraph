@@ -95,17 +95,17 @@ int main(int argc, char** argv) {
   // Map the graph to gmap 
   igraph_t gmap; 
   igraph_empty(&gmap, n, IGRAPH_UNDIRECTED);
-  for(int i=0;i<m;i++) {
-     igraph_integer_t from, to;
-     igraph_edge(&g,i,&from,&to);
-     from=(int)VECTOR(map2)[from];
-     to=(int)VECTOR(map2)[to]; 
-     igraph_add_edge(&gmap,from,to);
-    }
   for(int ii=0;ii<n;ii++) {
     igraph_integer_t i = (int)VECTOR(map2)[ii];
     VECTOR(invmap2)[i] = ii;
    }
+  for(int i=0;i<m;i++) {
+     igraph_integer_t from, to;
+     igraph_edge(&g,i,&from,&to);
+     from=(int)VECTOR(invmap2)[from];
+     to=(int)VECTOR(invmap2)[to]; 
+     igraph_add_edge(&gmap,from,to);
+    }
    printf("\nmap2="); igraph_vector_print(&map2);
    printf("\ninvmap2="); igraph_vector_print(&invmap2);
 
@@ -124,9 +124,13 @@ int main(int argc, char** argv) {
   sprintf(sspos,"Graph=%s,X=[],Y=[],ATFree=%d ",sname,isatfree);
   exportToDot(&g,loc,dia+1,sname,sspos,&map2,0);
 
-  sprintf(sname,"mlbfs2-%s",argv[1]);  
+  sprintf(sname,"maplbfs2-%s",argv[1]);  
+  sprintf(sspos,"Graph=%s (mapped),X=[],Y=[],ATFree=%d ",sname,isatfree);
+  exportToDot(&gmap,loc,dia+1,sname,sspos,NULL,0);
+
+  sprintf(sname,"remaplbfs2-%s",argv[1]);  
   sprintf(sspos,"Graph=%s,X=[],Y=[],ATFree=%d ",sname,isatfree);
-  exportToDot(&gmap,loc,dia+1,sname,sspos,&invmap2,1);
+  exportToDot(&gmap,loc,dia+1,sname,sspos,&map2,1);
 
   if(isatfree) printf("\nG is AT-Free");
   else printf("\nG is not AT-Free");
