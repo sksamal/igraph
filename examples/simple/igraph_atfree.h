@@ -134,8 +134,10 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  if(!connected) {
 		     if(atfree) printf("\n(");
 		     atfree=0;
-		     printf("Connect %d---%d and ",u,j);
+		     //printf("Connect %d---%d and ",u,j);
+		     /* Did I connect it already(just now?) */
 		     igraph_are_connected(g1,u,j,&connected);
+		     if(!connected) printf("Connect %d---%d and ",u,j);
 		     if(shallAdd && !connected) igraph_add_edge(g1,u,j);
 		  }
 	        }
@@ -143,8 +145,10 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
                 /* If not atfree, and edges are not added to backward neighbors earlier,
                  * add edge (v,j) in g1 */ 
 		if(!atfree) {
-		  printf(") OR (Connect %d---%d)",v,j);
+		  /* Did I connect it already(just now?) */
+		 // printf(") OR (Connect %d---%d)",v,j);
 		  igraph_are_connected(g1,v,j,&connected);
+		  if(!connected) printf(") OR (Connect %d---%d)",v,j);
 		  if(!connected && !shallAdd) igraph_add_edge(g1,v,j);
 		  if(!shallAdd) printf("*");
 		}

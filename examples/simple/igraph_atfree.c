@@ -110,8 +110,6 @@ int main(int argc, char** argv) {
   SETGAS(&g, "label", "Graph G");
   SETGAN(&g, "vertices", igraph_vcount(&g));
   SETGAN(&g, "edges", igraph_ecount(&g));
-//  SETGAB(&g, "famous", 1);
-//  igraph_simplify(&g,1,1,0);   // removes cycles and edges
   igraph_integer_t result;
   igraph_vertex_connectivity(&g,&result,1);
   printf("\nVertex connectivity=%d",result);

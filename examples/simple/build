@@ -1,8 +1,10 @@
 host=`hostname`;
 export JID=$2
 if [ "$host" == "localhost.localdomain" ] ; then
-   make igraph_atfree $1 -f Makefile.localhost; 
+#   make igraph_atfree $1 -f Makefile.localhost; 
+   make $1 -f Makefile.localhost; 
 else
-   make igraph_atfree $1 -f Makefile.tusker; 
+#   make igraph_atfree $1 -f Makefile.tusker; 
+   make $1 -f Makefile.tusker; 
 fi 
 

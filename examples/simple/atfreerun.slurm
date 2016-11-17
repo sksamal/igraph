@@ -3,9 +3,9 @@
 #SBATCH --mem-per-cpu=3500mb
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --job-name=atrun
-#SBATCH --error=/work/deogun/ssamal/igraph/examples/simple/atrun-%j.err
-#SBATCH --output=/work/deogun/ssamal/igraph/examples/simple/atrun-%j.out
+#SBATCH --job-name=atgen
+#SBATCH --error=/work/deogun/ssamal/igraph/examples/simple/atgen-%j.err
+#SBATCH --output=/work/deogun/ssamal/igraph/examples/simple/atgen-%j.out
 
 module load compiler/gcc/5.4
 ssh ssamal@cse.unl.edu "mkdir -p ~/igraph/$SLURM_JOBID"
@@ -15,7 +15,9 @@ git log -1 >> stats.txt
 echo "Running at " >> stats.txt
 date >> stats.txt
 scp stats.txt ssamal@cse.unl.edu:~/igraph/$SLURM_JOBID
-./build runat $SLURM_JOBID
+#./build runat $SLURM_JOBID
+./build genat $SLURM_JOBID
 echo "Successfully completed" >> stats.txt
 scp stats.txt ssamal@cse.unl.edu:~/igraph/$SLURM_JOBID
-rm -f aa*.txt *.dot
+rm -rf *test*
+#rm -f aa*.txt *.dot

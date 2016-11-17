@@ -9,9 +9,9 @@
 #include "igraph_atfree.h"
 
 void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1);
-void exportToDot(igraph_t *g, int *loc, int l,igraph_vector_t *map, char *filename, char *text);
+void exportToDot(igraph_t *g, int *loc, int l, char *filename, char *text, igraph_vector_t *map, igraph_bool_t inverse);
 void LBFS(igraph_t *g, igraph_vector_t *Y, igraph_vector_t *X, igraph_vector_t *label, igraph_vector_t *map);
-void OrderGrid(igraph_t *g, int *loc, int size, igraph_vector_t *X);
+void OrderGrid(igraph_t *g, int *loc, int l, igraph_vector_t *X, igraph_vector_t *map);
 
 int main(int argc, char** argv) {
   
@@ -35,7 +35,6 @@ int main(int argc, char** argv) {
   char fileName[40];
   sprintf(fileName,"%s.edg",argv[1]);
   FILE *fp = fopen(fileName,"r");
-//  igraph_read_graph_dot(&g, fp);
   igraph_read_graph_edgelist(&g,fp,0,0);
  
   int n = igraph_vcount(&g);
@@ -48,90 +47,122 @@ int main(int argc, char** argv) {
   printf("\nVertex connectivity=%d",result);
   igraph_diameter(&g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
   printf("\nDiameter=%d",dia);
-  int loc[dia+1];
+
+  /* Randomly assign values in loc, just for printing */
+  int loc[dia+1], s = n/(dia+1);
+  for(int i=0;i<dia;i++) loc[i]=(i+1)*s;
+  loc[dia]=n;
 
   /* Calculate dominating pair set */
   igraph_vector_t X,Y,label1,label2,map1,map2;
+  igraph_vector_t invmap2;
   igraph_vector_init(&label1,n);
   igraph_vector_init(&label2,n);
   igraph_vector_init(&map1,n);
   igraph_vector_init(&map2,n);
+  igraph_vector_init(&invmap2,n);
   igraph_vector_init(&X,0);
   igraph_vector_init(&Y,1);
   VECTOR(Y)[0] = rand()%n;
   
   char sspos[680];
   char sname[30];
-//  sprintf(sname,"orig-%s",argv[1]);  
-//  sprintf(sspos,"Graph=%s, AT-Free=%d",sname,0);
-//  exportToDot(&g,loc,dia+1,NULL,sname,sspos);
+  sprintf(sname,"%s",argv[1]);  
+  sprintf(sspos,"Graph=%s",sname);
+  exportToDot(&g,loc,dia+1,sname,sspos,NULL,0);
   LBFS(&g,&Y,&X,&label1,&map1);
   printf("\n Y="); igraph_vector_print(&Y);
   printf(" X="); igraph_vector_print(&X);
-  OrderGrid(&g,loc,dia+1,&X);
-  sprintf(sname,"lbfs1-%s",argv[1]);  
-  sprintf(sspos,"Graph=%s, AT-Free=%d",sname,0);
+  igraph_vector_null(&map1);
+  OrderGrid(&g,loc,dia+1,&X,&map1);
   printf("\n Loc=");
   for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
-  exportToDot(&g,loc,dia+1,&map1,sname,sspos);
+  sprintf(sname,"lbfs1-%s",argv[1]);  
+  sprintf(sspos,"Graph=%s,Y=[] , X=[]  ",sname,0);
+  exportToDot(&g,loc,dia+1,sname,sspos,&map1,0);
   igraph_vector_clear(&Y);
   LBFS(&g,&X,&Y,&label2,&map2);
   printf("\n X="); igraph_vector_print(&X);
   printf(" Y="); igraph_vector_print(&Y);
-  OrderGrid(&g,loc,dia+1,&Y);
-  sprintf(sname,"lbfs2-%s",argv[1]);  
-  sprintf(sspos,"Graph=%s, AT-Free=%d",sname,0);
+  igraph_vector_null(&map2);
+  OrderGrid(&g,loc,dia+1,&Y,&map2);
   printf("\n Loc=");
   for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
-  exportToDot(&g,loc,dia+1,&map2,sname,sspos);
- 
- /* Copy the graph to g1, check ATFree condition
+  //printf("\nmap1="); igraph_vector_print(&map1);
+  //printf("\nmap2="); igraph_vector_print(&map2);
+
+  /* We check AT-Free congition before printing */
+  // Map the graph to gmap 
+  igraph_t gmap; 
+  igraph_empty(&gmap, n, IGRAPH_UNDIRECTED);
+  for(int i=0;i<m;i++) {
+     igraph_integer_t from, to;
+     igraph_edge(&g,i,&from,&to);
+     from=(int)VECTOR(map2)[from];
+     to=(int)VECTOR(map2)[to]; 
+     igraph_add_edge(&gmap,from,to);
+    }
+  for(int ii=0;ii<n;ii++) {
+    igraph_integer_t i = (int)VECTOR(map2)[ii];
+    VECTOR(invmap2)[i] = ii;
+   }
+   printf("\nmap2="); igraph_vector_print(&map2);
+   printf("\ninvmap2="); igraph_vector_print(&invmap2);
+
+ /* Copy the graph to gmap1, check ATFree condition
    *  and make it AT-Free if it is not already */
-  igraph_t g1;
-  igraph_copy(&g1,&g);
+  igraph_t gmap1;
+  igraph_copy(&gmap1,&gmap);
 
   /* Copy the graph to g1, check ATFree condition
    *  and make it AT-Free if it is not already */
   igraph_bool_t isatfree;
-  isATFree(&g,loc,dia+1,&isatfree,&g1);
+  isATFree(&gmap,loc,dia+1,&isatfree,&gmap1);
+
+  /* Print the graph g with ATFree result */
+  sprintf(sname,"lbfs2-%s",argv[1]);  
+  sprintf(sspos,"Graph=%s,X=[],Y=[],ATFree=%d ",sname,isatfree);
+  exportToDot(&g,loc,dia+1,sname,sspos,&map2,0);
+
+  sprintf(sname,"mlbfs2-%s",argv[1]);  
+  sprintf(sspos,"Graph=%s,X=[],Y=[],ATFree=%d ",sname,isatfree);
+  exportToDot(&gmap,loc,dia+1,sname,sspos,&invmap2,1);
 
   if(isatfree) printf("\nG is AT-Free");
   else printf("\nG is not AT-Free");
 
-  /* Finally run the same test on vertices of g2
+  /* Finally run the same test on vertices of gmap1
    * to make sure it is AT-Free */
-  igraph_t g2;
-  igraph_copy(&g2,&g1);
+  igraph_t gmap2;
+  igraph_copy(&gmap2,&gmap1);
   int isatfree1=1;
-  isATFree(&g1,loc,dia+1,&isatfree1,&g2);
+  isATFree(&gmap1,loc,dia+1,&isatfree1,&gmap2);
 
   if(isatfree1) printf("\nG' is AT-Free");
   else printf("\nG' is not AT-Free");
  
-  /* Write g to the file specified in stdin */ 
-  char spos[680];
-  char name[30];
+  /* Write g1 to the file specified in stdin */ 
 //  sprintf(name,"gd-%s",argv[1]);  
 //  sprintf(spos,"Graph=%s, AT-Free=%d",name,isatfree);
 //  exportToDot(&g1,loc,dia,NULL,name,spos);
 
-  /* Write g1 to <at><file specified in stdin> */
-  sprintf(name,"at-%s",argv[1]);  
-  igraph_bool_t oiso=isHamiltonian(&g1,loc,dia+1);
-  if(oiso) sprintf(name,"hat-%s",argv[1]);  
-  sprintf(spos,"Graph=%s, ATFree=%d,OurAlgo=%d",argv[1],isatfree1,oiso);
-  exportToDot(&g1,loc,dia,NULL,name,spos);
+  /* Write gmap1 to <at><file specified in stdin> */
+  sprintf(sname,"at-%s",argv[1]);  
+  igraph_bool_t oiso=isHamiltonian(&gmap1,loc,dia+1);
+  if(oiso) sprintf(sname,"hat-%s",argv[1]);  
+  sprintf(sspos,"Graph=%s, ATFree=%d,OurAlgo=%d",sname,isatfree1,oiso);
+  exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 
   /* Run the LAD and VFS isomorphism algorithms 
-   *   present in igraph and if successful rewrite g1*/
+   *   present in igraph and if successful rewrite gmap1*/
   char path1[300], path2[300];
   path1[0]='\0';
   path2[0]='\0';
   igraph_bool_t iso1=0, iso2=0;
-  isHamUsingLAD(&g1,&iso1, path1);
-  isHamUsingVF2(&g1,&iso2, path2);
-  sprintf(spos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",argv[1],isatfree1,oiso,iso1, path1,iso2, path2);
-  exportToDot(&g1,loc,dia,NULL,name,spos);
+  isHamUsingLAD(&gmap1,&iso1, path1);
+  isHamUsingVF2(&gmap1,&iso2, path2);
+  sprintf(sspos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",sname,isatfree1,oiso,iso1, path1,iso2, path2);
+  exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
   igraph_vector_destroy(&label1);
   igraph_vector_destroy(&label2);
   igraph_vector_destroy(&map1);
@@ -139,14 +170,15 @@ int main(int argc, char** argv) {
   igraph_vector_destroy(&X);
   igraph_vector_destroy(&Y);
   igraph_destroy(&g);
-  igraph_destroy(&g1);
-  igraph_destroy(&g2);
+  igraph_destroy(&gmap1);
+  igraph_destroy(&gmap2);
   return 0;
 }
 
 /* Size or l = number of levels */
-void OrderGrid(igraph_t *g, int *loc, int size, igraph_vector_t *X) {
+void OrderGrid(igraph_t *g, int *loc, int l, igraph_vector_t *X, igraph_vector_t *map) {
 
+	int mapIndex = 0;
 	igraph_vector_t vlevel;
 	igraph_vector_copy(&vlevel,X);
 
@@ -155,7 +187,7 @@ void OrderGrid(igraph_t *g, int *loc, int size, igraph_vector_t *X) {
 	for(int i=0;i<n;i++) visited[i]=0;
 
 	printf("\n");
-	for(int i=0;i<size;i++)
+	for(int i=0;i<l;i++)
 	 {
 	   igraph_vs_t vs;
 	   igraph_vs_vector(&vs, &vlevel);
@@ -166,6 +198,7 @@ void OrderGrid(igraph_t *g, int *loc, int size, igraph_vector_t *X) {
 	   for(int j=0;j<igraph_vector_size(&vlevel);j++)
 	      {
 		int v = VECTOR(vlevel)[j];
+		VECTOR(*map)[mapIndex++] = v;
 		visited[v] = 1;
 	      }
 	   igraph_integer_t vssize;
@@ -306,7 +339,7 @@ void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g
 
   igraph_vector_t left,current, right,fnn;
   *isatfree=1;
-
+ 
   /* For every vertex j, find the non-neighbors in adjacent levels 
    * and apply the localATFree check */
   for(int j=0; j<loc[l-1];j++)
@@ -330,7 +363,7 @@ void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g
 }
 
 /* Note: l= number of levels */
-void exportToDot(igraph_t *g, int *loc, int l, igraph_vector_t *map, char *filename, char *text) {
+void exportToDot(igraph_t *g, int *loc, int l, char *filename, char *text, igraph_vector_t *map, igraph_bool_t inverse ) {
 
   double scale=1.0;
   /* Find max size of a level */
@@ -344,7 +377,7 @@ void exportToDot(igraph_t *g, int *loc, int l, igraph_vector_t *map, char *filen
   for(int i=0;i<l;i++) {
     int o = (i==0)?0:loc[i-1];
     for(int j=o;j<loc[i];j++) {
-  	if(map !=NULL)  v = (int)VECTOR(*map)[j];
+  	if(!inverse && map !=NULL)  v = (int)VECTOR(*map)[j];
 	else 		v = j;
   	char spos[8];
   	int low = (s-(loc[i]-o))/2;
@@ -354,7 +387,8 @@ void exportToDot(igraph_t *g, int *loc, int l, igraph_vector_t *map, char *filen
  	SETVAS(g, "pos",v,spos);
   	SETVAS(g, "shape",v,"point");
   	SETVAN(g, "fontsize",v,6);
-  	SETVAN(g, "xlabel",v,v);
+	if(inverse && map !=NULL) SETVAN(g, "xlabel",v,(int)VECTOR(*map)[v]);
+  	else 	    SETVAN(g, "xlabel",v,v);
      }
 }
 

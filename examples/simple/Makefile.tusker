@@ -38,9 +38,16 @@ runat: igraph_atfree
 	timeout 5m ./igraph_atfree aa$$a.dot > aa$$a.txt;\
 	scp aa$$a.dot maa$$a.dot aa$$a.txt ssamal@cse.unl.edu:~/igraph/$$JID;\
 done
-#dot -Kfdp -n aa$$a.dot -Tpdf > aa$$a.pdf; \
-#dot -Kfdp -n maa$$a.dot -Tpdf > maa$$a.pdf; \
-#scp aa$$a.dot maa$$a.dot aa$$a.pdf maa$$a.pdf aa$$a.txt ssamal@cse.unl.edu:~/igraph/$$JID; 
+
+genat: igraph_atgen igraph_atread
+	for a in `seq 1 100` ; do \
+	sleep 3; \
+	./igraph_atgen test$$a.dot; \
+	timeout 5m ./igraph_atread test$$a.dot > test$$a.txt; \
+	scp *test$$a.dot test$$a.txt ssamal@cse.unl.edu:~/igraph/$$JID;\
+done ;\
+ssh ssamal@cse.unl.edu "igraph/convert.sh ./$$JID";
+
 run: igraph_atfree
 	./igraph_atfree aa.dot > aa.txt; \
 	dot -Kfdp -n aa.dot -Tpdf >aa.pdf; \
