@@ -19,5 +19,5 @@ scp stats.txt ssamal@cse.unl.edu:~/igraph/$SLURM_JOBID
 ./build genat $SLURM_JOBID
 echo "Successfully completed" >> stats.txt
 scp stats.txt ssamal@cse.unl.edu:~/igraph/$SLURM_JOBID
-rm -rf *test*
+rm -rf *test*.dot
 #rm -f aa*.txt *.dot

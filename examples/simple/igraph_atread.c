@@ -145,11 +145,6 @@ int main(int argc, char** argv) {
   if(isatfree1) printf("\nG' is AT-Free");
   else printf("\nG' is not AT-Free");
  
-  /* Write g1 to the file specified in stdin */ 
-//  sprintf(name,"gd-%s",argv[1]);  
-//  sprintf(spos,"Graph=%s, AT-Free=%d",name,isatfree);
-//  exportToDot(&g1,loc,dia,NULL,name,spos);
-
   /* Write gmap1 to <at><file specified in stdin> */
   sprintf(sname,"at-%s",argv[1]);  
   igraph_bool_t oiso=isHamiltonian(&gmap1,loc,dia+1);
@@ -341,28 +336,38 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
 
 void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1) {
 
-  igraph_vector_t left,current, right,fnn;
+  igraph_vector_t left,current, right,fnn, cnn;
   *isatfree=1;
  
   /* For every vertex j, find the non-neighbors in adjacent levels 
-   * and apply the localATFree check */
+   * and apply the localATFree check 
+   *
+   * Also get the neighbors in the current levels and 
+   * apply the level check */
   for(int j=0; j<loc[l-1];j++)
    {
       igraph_vector_init(&left,1);
       igraph_vector_init(&current,1);
       igraph_vector_init(&right,1);
       igraph_vector_init(&fnn,1);
+      igraph_vector_init(&cnn,1);
       cutNeighbors(g,j,loc,&left,&current,&right);
       forwardNonNeighbors(g,j,loc,l,&fnn);
+      currentNonNeighbors(g,j,loc,l,&cnn);
 
     /*  For vertex j, is the local condition true ? , If not add edges
-     *  in graph g1, which was originally a copy og g */   
+     *  in graph g1, which was originally a copy of g */   
       *isatfree = *isatfree & isDominSatisfied(g,j,loc,&fnn,g1);
+
+    /*  For vertex j, is the level condition true ? , If not add edges
+     *  in graph g1, which was originally a copy of g */   
+      *isatfree = *isatfree & isLevelSatisfied(g,j,loc,&cnn,g1);
 
   igraph_vector_destroy(&left);
   igraph_vector_destroy(&current);
   igraph_vector_destroy(&right);
   igraph_vector_destroy(&fnn);
+  igraph_vector_destroy(&cnn);
    }
 }
 

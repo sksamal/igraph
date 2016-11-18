@@ -9,7 +9,9 @@
 #define LSIZE 7 
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
 igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1);
+igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1);
 void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *fnn);
+void currentNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *cnn);
 void getNeighbors(igraph_t* g,int j, int *loc,igraph_vector_t *ne, int dir);
 igraph_bool_t isHamiltonian(igraph_t* g, int *loc, int l);
 void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path);
@@ -94,6 +96,24 @@ void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vecto
    igraph_vector_resize_min(fnn);
 }
 
+/* This method finds all non-neighbors of a vertex j (in level i) in the same level (i)
+ * returns them in a vector*/
+void currentNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *cnn) {
+
+   /* First find j's level */
+   int i=0;
+   while(j>=loc[i]) i++;
+   if(i==locsize) return ;
+
+   /* For every vertex in next level, if they are not connected add it in the vector */
+   igraph_bool_t connected;
+   for(int k=loc[i-1]; k<loc[i];k++) {
+      igraph_are_connected(g,j,k,&connected);
+      if(!connected)
+	igraph_vector_insert(cnn,0,k);
+   }
+   igraph_vector_resize_min(cnn);
+}
 /* This method checks the local AT-Free condition in both the directions. Returns a 
  * true if the localcheck worked, else adds edges in g1 (which is essentially a copy of g)
  * to satisfy the local checkadds edges in g1 (which is essentially a copy of g)
@@ -132,7 +152,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  int u = (int) VECTOR(kbni)[l];
 	          igraph_are_connected(g,u,j,&connected);
 		  if(!connected) {
-		     if(atfree) printf("\n(");
+		     if(atfree) printf("\nF: (");
 		     atfree=0;
 		     //printf("Connect %d---%d and ",u,j);
 		     /* Did I connect it already(just now?) */
@@ -193,7 +213,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  int u = (int) VECTOR(knni)[l];
 	          igraph_are_connected(g,u,w,&connected);
 		  if(!connected) {
-		     if(atfree) printf("\n(");
+		     if(atfree) printf("\nF: ( ");
 		     atfree=0;
 		     printf("Connect %d---%d and ",u,w);
 		     igraph_are_connected(g1,u,w,&connected);
@@ -205,7 +225,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  printf(") OR (Connect %d---%d)",v,w);
 		  igraph_are_connected(g1,v,w,&connected);
 		  if(!connected && !shallAdd) igraph_add_edge(g1,v,w);
-		  if(!shallAdd) printf("*");
+		  if(!connected && !shallAdd) printf("*");
 	        }
 		isatfree=isatfree & atfree;
 		igraph_vector_destroy(&kbni);
@@ -340,4 +360,79 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 	 printf("%d ",extra[l]); 
 	return isHamiltonian;
 
+}
+
+
+/* This method checks the local AT-Free condition in both the directions. Returns a 
+ * true if the localcheck worked, else adds edges in g1 (which is essentially a copy of g)
+ * to satisfy the local checkadds edges in g1 (which is essentially a copy of g)
+ * to satisfy the local check . It takes j and it's current level non-neighbors as
+ * input */
+igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1) {
+
+   igraph_bool_t connected, atfree, isatfree=1;
+
+  /* For each current non-neighbors of j */ 
+  for (int i=0; i<igraph_vector_size(cnn)-1; i++) {
+    	int w = (int) VECTOR(*cnn)[i];
+   	igraph_vector_t ibni,icni,inni;
+   	igraph_vector_init(&ibni, 1);
+   	igraph_vector_init(&icni, 1);
+   	igraph_vector_init(&inni, 1);
+	/* Get current neighbors of w and see if it is connected to j */
+	cutNeighbors(g,w,loc,&ibni,&icni,&inni);
+	for (int k=0; k<igraph_vector_size(&icni)-1; k++) {
+	  int v = (int) VECTOR(icni)[k];	
+	  igraph_are_connected(g,v,j,&connected);
+	  atfree=1;
+	  /* If not connected to j, find its current neighbors and 
+ 	   * see if it is connected to j */
+	  if(!connected)
+	   {
+   		igraph_vector_t kbni,kcni,knni;
+   		igraph_vector_init(&kbni, 1);
+   		igraph_vector_init(&kcni, 1);
+   		igraph_vector_init(&knni, 1);
+		cutNeighbors(g,v,loc,&kbni,&kcni,&knni);
+		/*Randomly decide if we need to add edges (u,j) 
+                 *for all u with current neighbors  */
+		igraph_bool_t shallAdd = rand()%2;
+		for (int l=0; l<igraph_vector_size(&kcni)-1; l++) {
+		  int u = (int) VECTOR(kcni)[l];
+	          igraph_are_connected(g,u,j,&connected);
+		  if(!connected) {
+		     if(atfree) printf("\nC: (");
+		     atfree=0;
+		     //printf("Connect %d---%d and ",u,j);
+		     /* Did I connect it already(just now?) */
+		     igraph_are_connected(g1,u,j,&connected);
+		     if(!connected) printf("Connect %d---%d and ",u,j);
+		     if(shallAdd && !connected) igraph_add_edge(g1,u,j);
+		  }
+	        }
+		if(shallAdd) printf("*");
+                /* If not atfree, and edges are not added to current neighbors earlier,
+                 * add edge (v,j) in g1 */ 
+		if(!atfree) {
+		  /* Did I connect it already(just now?) */
+		 // printf(") OR (Connect %d---%d)",v,j);
+		  igraph_are_connected(g1,v,j,&connected);
+		  if(!connected) printf(") OR (Connect %d---%d)",v,j);
+		  if(!connected && !shallAdd) igraph_add_edge(g1,v,j);
+		  if(!connected && !shallAdd) printf("*");
+		}
+		isatfree=isatfree & atfree;
+		igraph_vector_destroy(&kbni);
+		igraph_vector_destroy(&kcni);
+		igraph_vector_destroy(&knni);
+	   }
+	}
+	igraph_vector_destroy(&ibni);
+	igraph_vector_destroy(&icni);
+	igraph_vector_destroy(&inni);
+
+	/* No need to do the exact same thing with j 
+         * as it will be covered when other vertices are explored*/
+     }
+  return isatfree;		
 }
