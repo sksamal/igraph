@@ -45,8 +45,8 @@ genat: igraph_atgen igraph_atread
 	./igraph_atgen test$$a.dot; \
 	timeout 5m ./igraph_atread test$$a.dot > test$$a.txt; \
 	scp *test$$a.dot test$$a.txt ssamal@cse.unl.edu:~/igraph/$$JID;\
-done ;\
-ssh ssamal@cse.unl.edu "igraph/convert.sh ./$$JID";
+	ssh ssamal@cse.unl.edu "igraph/convert.sh igraph/$$JID test$$a";\
+done ;
 
 run: igraph_atfree
 	./igraph_atfree aa.dot > aa.txt; \
