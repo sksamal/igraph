@@ -152,7 +152,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  int u = (int) VECTOR(kbni)[l];
 	          igraph_are_connected(g,u,j,&connected);
 		  if(!connected) {
-		     if(atfree) printf("\nF: (");
+		     if(atfree) printf("\nF(%d,%d): (",w,j);
 		     atfree=0;
 		     //printf("Connect %d---%d and ",u,j);
 		     /* Did I connect it already(just now?) */
@@ -213,7 +213,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  int u = (int) VECTOR(knni)[l];
 	          igraph_are_connected(g,u,w,&connected);
 		  if(!connected) {
-		     if(atfree) printf("\nF: ( ");
+		     if(atfree) printf("\nF(%d,%d): ( ",j,w);
 		     atfree=0;
 		     printf("Connect %d---%d and ",u,w);
 		     igraph_are_connected(g1,u,w,&connected);
