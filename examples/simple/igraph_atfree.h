@@ -401,7 +401,7 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 		  int u = (int) VECTOR(kcni)[l];
 	          igraph_are_connected(g,u,j,&connected);
 		  if(!connected) {
-		     if(atfree) printf("\nC: (");
+		     if(atfree) printf("\nC:(%d,%d) (",w,j);
 		     atfree=0;
 		     //printf("Connect %d---%d and ",u,j);
 		     /* Did I connect it already(just now?) */
