@@ -73,17 +73,40 @@ int main(int argc, char** argv) {
   LBFS(&g,&Y,&X,&label1,&map1);
   printf("\n Y="); igraph_vector_print(&Y);
   printf(" X="); igraph_vector_print(&X);
+
+  char x[100], y[100];
+  for(int i=0;i<igraph_vector_size(&X);i++) {
+	if(i==0) sprintf(x,"%d",(int)VECTOR(X)[0]);
+	else  	 sprintf(x,"%s %d",x,(int)VECTOR(X)[i]);
+  }
+
+  for(int i=0;i<igraph_vector_size(&Y);i++) {
+	if(i==0) sprintf(y,"%d",(int)VECTOR(Y)[0]);
+	else  	 sprintf(y,"%s %d",y,(int)VECTOR(Y)[i]);
+  }
+
   igraph_vector_null(&map1);
   OrderGrid(&g,loc,dia+1,&X,&map1);
   printf("\n Loc=");
   for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
   sprintf(sname,"lbfs1-%s",argv[1]);  
-  sprintf(sspos,"Graph=%s,Y=[] , X=[]  ",sname,0);
+  sprintf(sspos,"Graph=%s,Y=[%s] , X=[%s]  ",sname,y,x);
   exportToDot(&g,loc,dia+1,sname,sspos,&map1,0);
   igraph_vector_clear(&Y);
   LBFS(&g,&X,&Y,&label2,&map2);
   printf("\n X="); igraph_vector_print(&X);
   printf(" Y="); igraph_vector_print(&Y);
+
+  for(int i=0;i<igraph_vector_size(&X);i++) {
+	if(i==0) sprintf(x,"%d",(int)VECTOR(X)[0]);
+	else  	 sprintf(x,"%s %d",x,(int)VECTOR(X)[i]);
+  }
+
+  for(int i=0;i<igraph_vector_size(&Y);i++) {
+	if(i==0) sprintf(y,"%d",(int)VECTOR(Y)[0]);
+	else  	 sprintf(y,"%s %d",y,(int)VECTOR(Y)[i]);
+  }
+
   igraph_vector_null(&map2);
   OrderGrid(&g,loc,dia+1,&Y,&map2);
   printf("\n Loc=");
@@ -121,7 +144,7 @@ int main(int argc, char** argv) {
 
   /* Print the graph g with ATFree result */
   sprintf(sname,"lbfs2-%s",argv[1]);  
-  sprintf(sspos,"Graph=%s,X=[],Y=[],ATFree=%d ",sname,isatfree);
+  sprintf(sspos,"Graph=%s,X=[%s],Y=[%s],ATFree=%d ",sname,x,y,isatfree);
   exportToDot(&g,loc,dia+1,sname,sspos,&map2,0);
 
   sprintf(sname,"maplbfs2-%s",argv[1]);  
@@ -129,7 +152,7 @@ int main(int argc, char** argv) {
   exportToDot(&gmap,loc,dia+1,sname,sspos,NULL,0);
 
   sprintf(sname,"remaplbfs2-%s",argv[1]);  
-  sprintf(sspos,"Graph=%s,X=[],Y=[],ATFree=%d ",sname,isatfree);
+  sprintf(sspos,"Graph=%s,X=[%s],Y=[%s],ATFree=%d ",sname,x,y,isatfree);
   exportToDot(&gmap,loc,dia+1,sname,sspos,&map2,1);
 
   if(isatfree) printf("\nG is AT-Free");

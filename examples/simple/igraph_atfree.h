@@ -363,8 +363,8 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 }
 
 
-/* This method checks the local AT-Free condition in both the directions. Returns a 
- * true if the localcheck worked, else adds edges in g1 (which is essentially a copy of g)
+/* This method checks the local AT-Free condition for vertices in same levels in both the directions. 
+ * Returns true if the localcheck worked, else adds edges in g1 (which is essentially a copy of g)
  * to satisfy the local checkadds edges in g1 (which is essentially a copy of g)
  * to satisfy the local check . It takes j and it's current level non-neighbors as
  * input */
