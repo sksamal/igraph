@@ -1,0 +1,29 @@
+Refer to the graph lbfs2- in each case. It shows X and Y
+
+[atgraph1.dot.edg]:
+
+[atgraph2.dot.edg]:
+    The AT is on the 4th level. Vertices (3,5,8) represent an AT. Note the dominating sets are X = [0] and Y = [11] and the AT-Free local adjacent property is satisfied. All vertices in every level connect toall vertices in their adjacent levels. All vertices are connected to all the dominating paths. 
+    The dominating property is satisfied by all vertices ,and hence this case is missed by our ATFreeLocalCheck. There exist separate paths between (3,5) , (5,8) and (3,8) in the same level.
+
+[atgraph3.dot.edg]: 
+    In this graph, (7,13) are not connected and (10,11) are not connected. There is an AT (7,15,10) or (3,15,6) and we can find more; because there is a path (7,15) avoiding 10, and there is a path (10,15) through 13 avoiding 7. In this case, though LBFS suceeded in organizing the vertices, X and Y are not thedominating sets and graph is not AT-Free. 
+    The dominating path property (though it doesnot mean anything here as X and Y are not pokable dominating sets) ATFreeLocalCheck property succeeds here and reports there is no AT.
+    One observation is two vertices of the AT (7,10) is in same level and in such case either N(7) should be completely in N(10) or vice-versa. However, this still needs to be proved. If any of one edges is added (7,13) or (10,11), the graph becomes AT-Free. But note the LBFS structure changes now.
+
+[atgraph4.dot.edg]: 
+
+[atgraph5.dot.edg]:
+
+[atgraph6.dot.edg]:
+     Vertices (3,6) are not connected, otherwise all other vertices are connected to all vertices in adjacent levels. The pokable dominating sets are X = [12,13] and Y = [14]. 3 connects the paths through 6 at same level (3,0) or next level at (14) (note 3,1 are not  connected.  Similarly 6 connects all dominating paths through 3 in the previous level at (8,9,10,11).
+     In this case the localATFree condition is satisfied which also states that the graph is AT-Free. However, note that removal of Y=[14] results in a AT-Free graph but Y' is not [0,1,2,3] as desired. The LBFS structure changes as can be seen in atgraph7.dot.
+
+[atgraph7.dot.edg]:
+     This is an interesting graph obtained from atgraph6.dot by removing vertex (14) that was a pokable dominating set. Note, the graph is AT-free, but set X = [3] only although there are 4 vertices (0,1,2,3) in the last level.
+     Note, 6 intercepts all dominating paths in the previous level at (8,9,10,11). LocalATFree check condition may be an overhead(?) here as vertices just need to be adjacent to dominating paths between [12,13] and [3]. Also, removal of a dominating set X = [14] from atgraph5 doesnot mean the next level is another dominating set, however it does contain the dominating set X = [3].
+
+[atgraph8.dot.edg]:
+     In this graph (13,9) and (12,11) are not connected. (13,12,5) form an AT. Infact, 5 can be replaced by many other vertices. X=[3,2,1,0] and Y=[13,12] are not the pokable dominating sets.
+     Local ATFreeCheck here suceeds for (11,12) as N(11) is not in 12, and there is no L^2(11) to check to. Similarly for (13,9), N(9) is not in N(13) and L^2(9) doesnot exist. 
+     What this means is if L^2 or R^2 doesnot exist, it shouldnot be ignored, L and R have to be adjacent. 13 should be adjacent to 9 and 12 should be adjacent to 11.
