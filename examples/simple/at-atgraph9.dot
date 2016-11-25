@@ -1,0 +1,20 @@
+/* Created by igraph 0.8.0-pre+0200568 */
+graph {
+  graph [
+    label="Graph=at-atgraph9, AT-Free=1,OurAlgo=0,\nLAD=0 [],\nVF2=0 [] "
+    labelloc=bottom
+  ];
+  0 [
+    pos="0.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=1
+  ];
+  1 [
+    pos="-0.100000,1.000000!"
+    shape=point
+    fontsize=6
+    xlabel=0
+  ];
+
+}

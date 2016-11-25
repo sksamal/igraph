@@ -1,0 +1,92 @@
+/* Created by igraph 0.8.0-pre+0200568 */
+graph {
+  graph [
+    label="Graph=at-atgraph93.dot, AT-Free=1,OurAlgo=0,\nLAD=0 [],\nVF2=0 [] "
+    labelloc=bottom
+  ];
+  0 [
+    pos="0.000000,2.000000!"
+    shape=point
+    fontsize=6
+    xlabel=7
+  ];
+  1 [
+    pos="1.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=5
+  ];
+  2 [
+    pos="0.900000,1.000000!"
+    shape=point
+    fontsize=6
+    xlabel=4
+  ];
+  3 [
+    pos="1.000000,2.000000!"
+    shape=point
+    fontsize=6
+    xlabel=3
+  ];
+  4 [
+    pos="0.900000,3.000000!"
+    shape=point
+    fontsize=6
+    xlabel=2
+  ];
+  5 [
+    pos="2.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=9
+  ];
+  6 [
+    pos="1.900000,1.000000!"
+    shape=point
+    fontsize=6
+    xlabel=8
+  ];
+  7 [
+    pos="2.000000,2.000000!"
+    shape=point
+    fontsize=6
+    xlabel=6
+  ];
+  8 [
+    pos="1.900000,3.000000!"
+    shape=point
+    fontsize=6
+    xlabel=1
+  ];
+  9 [
+    pos="2.000000,4.000000!"
+    shape=point
+    fontsize=6
+    xlabel=0
+  ];
+
+  9 -- 4;
+  9 -- 3;
+  9 -- 2;
+  9 -- 1;
+  8 -- 4;
+  8 -- 3;
+  8 -- 2;
+  8 -- 1;
+  7 -- 4;
+  4 -- 0;
+  6 -- 4;
+  5 -- 4;
+  7 -- 3;
+  3 -- 0;
+  6 -- 3;
+  5 -- 3;
+  7 -- 2;
+  2 -- 0;
+  6 -- 2;
+  5 -- 2;
+  7 -- 1;
+  1 -- 0;
+  6 -- 1;
+  5 -- 1;
+}

@@ -14,5 +14,7 @@ do
 	rm -rf c"$pre"pdf
 	pdfunite "$pre"pdf lbfs1-"$pre"pdf *lbfs2-"$pre"pdf *at-"$pre"pdf c"$pre"pdf
 done
+rm -rf maplbfs* remaplbfs*
+pdfunite lbfs2-"$patt"*pdf cl"$patt".pdf
 #pdfunite aa*.pdf caa.pdf
 #pdfunite maa*.pdf cmaa.pdf

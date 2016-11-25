@@ -1,0 +1,69 @@
+
+Number of vertices=16
+Number of Edges=43
+Vertex connectivity=2
+Diameter=6
+ Y=1
+ X=11
+
+i=0, Vlevel=11
+i=1, Vlevel=15 14
+i=2, Vlevel=10 9
+i=3, Vlevel=8 7 6 5 4 3
+i=4, Vlevel=2 1
+i=5, Vlevel=13 12
+i=6, Vlevel=0
+
+ Loc= 1  3  5  11  13  15  16 
+ X=11
+ Y=0
+
+i=0, Vlevel=0
+i=1, Vlevel=13 12
+i=2, Vlevel=2 1
+i=3, Vlevel=8 7 6 5 4 3
+i=4, Vlevel=10 9
+i=5, Vlevel=15 14
+i=6, Vlevel=11
+
+ Loc= 1  3  5  11  13  15  16 
+map2=0 13 12 2 1 8 7 6 5 4 3 10 9 15 14 11
+
+invmap2=0 4 3 10 9 8 7 6 5 12 11 15 2 1 14 13
+
+C:(10,5) (Connect 10---5 and Connect 7---5 and *) OR (Connect 9---5)
+C:(9,5) (Connect 9---5 and 
+C:(9,5) (Connect 9---5 and 
+C:(7,5) () OR (Connect 9---5)*
+C:(10,6) (Connect 10---6 and *) OR (Connect 8---6)
+C:(8,6) (Connect 8---6 and 
+C:(10,7) (Connect 10---7 and *) OR (Connect 8---7)
+C:(8,7) (Connect 8---7 and 
+C:(8,7) (Connect 8---7 and 
+C:(5,7) () OR (Connect 8---7)*
+C:(9,8) (Connect 9---8 and Connect 6---8 and 
+C:(9,8) (Connect 9---8 and ) OR (Connect 6---8)*
+C:(7,8) () OR (Connect 9---8)*
+C:(7,8) (*
+C:(6,8) (
+C:(6,8) (
+C:(8,9) (*
+C:(5,9) (
+C:(7,10) (
+C:(6,10) (
+C:(6,10) (*
+C:(5,10) (
+G is not AT-Free
+G' is AT-Free
+Level [minc,maxc] needc extra contr
+    0| [  1,  1]      1     0     0
+    1| [  2,  2]      2     0     0
+    2| [  2,  2]      2     0     0
+    3| [  1,  6]      2     1     4
+    4| [  2,  2]      2     0     0
+    5| [  2,  2]      2     0     0
+    6| [  1,  1]      1     0     0
+J0[Simple]:Graph is hamiltonian
+InLAD
+LAD Isomorphism: G is hamiltonianIn VF2
+VF2 Isomorphism: G is hamiltonian

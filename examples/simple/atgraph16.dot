@@ -1,0 +1,28 @@
+/* Created by igraph 0.8.0-pre+0200568 */
+graph {
+  graph [
+    label="Graph=atgraph16"
+    labelloc=bottom
+  ];
+  0 [
+    pos="0.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=0
+  ];
+  1 [
+    pos="1.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=1
+  ];
+  2 [
+    pos="2.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=2
+  ];
+
+  1 -- 0;
+  2 -- 0;
+}

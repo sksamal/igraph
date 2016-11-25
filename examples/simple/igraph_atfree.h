@@ -157,18 +157,18 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		     //printf("Connect %d---%d and ",u,j);
 		     /* Did I connect it already(just now?) */
 		     igraph_are_connected(g1,u,j,&connected);
-		     if(!connected) printf("Connect %d---%d and ",u,j);
+//		     if(!connected) printf("Connect %d---%d and ",u,j);
 		     if(shallAdd && !connected) igraph_add_edge(g1,u,j);
 		  }
 	        }
-		if(shallAdd) printf("*");
+//		if(shallAdd) printf("*");
                 /* If not atfree, and edges are not added to backward neighbors earlier,
                  * add edge (v,j) in g1 */ 
 		if(!atfree) {
 		  /* Did I connect it already(just now?) */
 		 // printf(") OR (Connect %d---%d)",v,j);
 		  igraph_are_connected(g1,v,j,&connected);
-		  if(!connected) printf(") OR (Connect %d---%d)",v,j);
+//		  if(!connected) printf(") OR (Connect %d---%d)",v,j);
 		  if(!connected && !shallAdd) igraph_add_edge(g1,v,j);
 		  if(!shallAdd) printf("*");
 		}
@@ -213,16 +213,16 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  int u = (int) VECTOR(knni)[l];
 	          igraph_are_connected(g,u,w,&connected);
 		  if(!connected) {
-		     if(atfree) printf("\nF(%d,%d): ( ",j,w);
+//		     if(atfree) printf("\nF(%d,%d): ( ",j,w);
 		     atfree=0;
-		     printf("Connect %d---%d and ",u,w);
+//		     printf("Connect %d---%d and ",u,w);
 		     igraph_are_connected(g1,u,w,&connected);
 		     if(shallAdd && !connected) igraph_add_edge(g1,u,w); 
 		  }
 	        } 
 		if(shallAdd) printf("*");
 		if(!atfree) {
-		  printf(") OR (Connect %d---%d)",v,w);
+//		  printf(") OR (Connect %d---%d)",v,w);
 		  igraph_are_connected(g1,v,w,&connected);
 		  if(!connected && !shallAdd) igraph_add_edge(g1,v,w);
 		  if(!connected && !shallAdd) printf("*");
@@ -401,23 +401,23 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 		  int u = (int) VECTOR(kcni)[l];
 	          igraph_are_connected(g,u,j,&connected);
 		  if(!connected) {
-		     if(atfree) printf("\nC:(%d,%d) (",w,j);
+//		     if(atfree) printf("\nC:(%d,%d) (",w,j);
 		     atfree=0;
 		     //printf("Connect %d---%d and ",u,j);
 		     /* Did I connect it already(just now?) */
 		     igraph_are_connected(g1,u,j,&connected);
-		     if(!connected) printf("Connect %d---%d and ",u,j);
+//		     if(!connected) printf("Connect %d---%d and ",u,j);
 		     if(shallAdd && !connected) igraph_add_edge(g1,u,j);
 		  }
 	        }
-		if(shallAdd) printf("*");
+//		if(shallAdd) printf("*");
                 /* If not atfree, and edges are not added to current neighbors earlier,
                  * add edge (v,j) in g1 */ 
 		if(!atfree) {
 		  /* Did I connect it already(just now?) */
 		 // printf(") OR (Connect %d---%d)",v,j);
 		  igraph_are_connected(g1,v,j,&connected);
-		  if(!connected) printf(") OR (Connect %d---%d)",v,j);
+//		  if(!connected) printf(") OR (Connect %d---%d)",v,j);
 		  if(!connected && !shallAdd) igraph_add_edge(g1,v,j);
 		  if(!connected && !shallAdd) printf("*");
 		}

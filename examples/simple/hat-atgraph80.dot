@@ -1,0 +1,133 @@
+/* Created by igraph 0.8.0-pre+0200568 */
+graph {
+  graph [
+    label="Graph=hat-atgraph80, AT-Free=1,OurAlgo=1,\nLAD=1 [HC:-0-7-11-13-8-6-9-12-10-5-3-1-2-4],\nVF2=1 [HC:-0-1-2-4-3-5-7-13-6-8-12-10-11-9] "
+    labelloc=bottom
+  ];
+  0 [
+    pos="0.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=3
+  ];
+  1 [
+    pos="-0.100000,1.000000!"
+    shape=point
+    fontsize=6
+    xlabel=2
+  ];
+  2 [
+    pos="0.000000,2.000000!"
+    shape=point
+    fontsize=6
+    xlabel=1
+  ];
+  3 [
+    pos="-0.100000,3.000000!"
+    shape=point
+    fontsize=6
+    xlabel=0
+  ];
+  4 [
+    pos="1.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=7
+  ];
+  5 [
+    pos="0.900000,1.000000!"
+    shape=point
+    fontsize=6
+    xlabel=6
+  ];
+  6 [
+    pos="1.000000,2.000000!"
+    shape=point
+    fontsize=6
+    xlabel=5
+  ];
+  7 [
+    pos="0.900000,3.000000!"
+    shape=point
+    fontsize=6
+    xlabel=4
+  ];
+  8 [
+    pos="2.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=11
+  ];
+  9 [
+    pos="1.900000,1.000000!"
+    shape=point
+    fontsize=6
+    xlabel=10
+  ];
+  10 [
+    pos="2.000000,2.000000!"
+    shape=point
+    fontsize=6
+    xlabel=9
+  ];
+  11 [
+    pos="1.900000,3.000000!"
+    shape=point
+    fontsize=6
+    xlabel=8
+  ];
+  12 [
+    pos="3.000000,1.000000!"
+    shape=point
+    fontsize=6
+    xlabel=12
+  ];
+  13 [
+    pos="2.900000,2.000000!"
+    shape=point
+    fontsize=6
+    xlabel=13
+  ];
+
+  3 -- 1;
+  7 -- 3;
+  6 -- 3;
+  5 -- 3;
+  4 -- 3;
+  2 -- 1;
+  7 -- 2;
+  6 -- 2;
+  5 -- 2;
+  4 -- 2;
+  1 -- 0;
+  7 -- 1;
+  6 -- 1;
+  5 -- 1;
+  4 -- 1;
+  7 -- 0;
+  6 -- 0;
+  4 -- 0;
+  11 -- 7;
+  10 -- 7;
+  9 -- 7;
+  8 -- 7;
+  11 -- 6;
+  10 -- 6;
+  9 -- 6;
+  8 -- 6;
+  5 -- 0;
+  11 -- 5;
+  10 -- 5;
+  9 -- 5;
+  8 -- 5;
+  11 -- 4;
+  10 -- 4;
+  9 -- 4;
+  8 -- 4;
+  12 -- 11;
+  12 -- 10;
+  12 -- 9;
+  13 -- 11;
+  13 -- 9;
+  13 -- 8;
+}

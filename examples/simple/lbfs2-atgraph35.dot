@@ -1,0 +1,42 @@
+/* Created by igraph 0.8.0-pre+0200568 */
+graph {
+  graph [
+    label="Graph=lbfs2-atgraph35,X=[3 2 1 0],Y=[4],ATFree=1 "
+    labelloc=bottom
+  ];
+  0 [
+    pos="0.900000,3.000000!"
+    shape=point
+    fontsize=6
+    xlabel=0
+  ];
+  1 [
+    pos="1.000000,2.000000!"
+    shape=point
+    fontsize=6
+    xlabel=1
+  ];
+  2 [
+    pos="0.900000,1.000000!"
+    shape=point
+    fontsize=6
+    xlabel=2
+  ];
+  3 [
+    pos="1.000000,0.000000!"
+    shape=point
+    fontsize=6
+    xlabel=3
+  ];
+  4 [
+    pos="0.000000,1.000000!"
+    shape=point
+    fontsize=6
+    xlabel=4
+  ];
+
+  4 -- 0;
+  4 -- 1;
+  4 -- 2;
+  4 -- 3;
+}
