@@ -8,7 +8,7 @@
 #include <string.h>
 #include "igraph_atfree.h"
 
-void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1);
+void isATFree(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1);
 void exportToDot(igraph_t *g, int *loc, int l, char *filename, char *text, igraph_vector_t *map, igraph_bool_t inverse);
 void LBFS(igraph_t *g, igraph_vector_t *Y, igraph_vector_t *X, igraph_vector_t *label, igraph_vector_t *map);
 void OrderGrid(igraph_t *g, int *loc, int l, igraph_vector_t *X, igraph_vector_t *map);
@@ -191,7 +191,7 @@ int main(int argc, char** argv) {
   igraph_t gmap2;
   igraph_copy(&gmap2,&gmap1);
   int isatfree1=1;
-  isATFree(&gmap1,loc,dia+1,&isatfree1,&gmap2);
+  isATFree(&gmap1,gname,loc,dia+1,&isatfree1,&gmap2);
 
   if(isatfree1) printf("\nG' is AT-Free");
   else printf("\nG' is not AT-Free");
@@ -254,6 +254,9 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   int n = igraph_vcount(g);
   int m = igraph_ecount(g);
 
+  /* No point in moving ahead if there are no vertices or no edges */
+  if(n==0 || m==0) return 1;
+
   if(igraph_vector_size(Y)==0) {
 //  igraph_vector_t Y;
   igraph_vector_init(Y,1);
@@ -288,7 +291,7 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int *loc, igraph_vector_t *
 //  VECTOR(Y)[0] = rand()%n;
   
   char sspos[680];
-  char sname[30];
+  char sname[200];
 
   sprintf(sname,"%s",gname);  
   sprintf(sspos,"Graph=%s",sname);
@@ -361,7 +364,7 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int *loc, igraph_vector_t *
 //  igraph_t gmap1;
   igraph_copy(gmap1,&gmap);
   igraph_bool_t isatfree;
-  isATFree(&gmap,loc,dia+1,&isatfree,gmap1);
+  isATFree(&gmap,gname,loc,dia+1,&isatfree,gmap1);
 
   /* Print the graph g with ATFree result */
   sprintf(sname,"lbfs2-%s",gname);  
@@ -548,7 +551,7 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
        igraph_strvector_destroy(&llabel);
 }
 
-void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1) {
+void isATFree(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1) {
 
   igraph_vector_t left,current, right,fnn, cnn;
   *isatfree=1;
@@ -563,8 +566,11 @@ void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g
    * apply the level check */
   for(int i=0; i<l;i++) {
     int j= (i==0)?0:loc[i-1];
-    for(; j<loc[l-1];j++)
+    igraph_vector_t tlevel;
+    igraph_vector_init(&tlevel,0);
+    for(; j<loc[i];j++)
     {
+      igraph_vector_insert(&tlevel,0,j);
       igraph_vector_init(&left,1);
       igraph_vector_init(&current,1);
       igraph_vector_init(&right,1);
@@ -575,31 +581,9 @@ void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g
 //      currentNonNeighbors(g,j,loc,l,&cnn);
 
     /*  For vertex j, is the local condition true ? , If not add edges
-     *  in graph g1, which was originally a copy of g */   
+     *  in graph g1, which was originally a copy of g 
+     *  This is for AT (x,y,z) in three different levels */   
       *isatfree = *isatfree & isDominSatisfied(g,j,loc,&fnn,g1);
-
-    /*  For vertex j, is the level condition true ? , If not add edges
-     *  in graph g1, which was originally a copy of g */   
- //     *isatfree = *isatfree & isLevelSatisfied(g,j,loc,&cnn,g1);
-
-      if(j==0 || j==loc[i-1]) {
-    /* For same level, extract the subgraph of the level and run the 
-     * complete process again */
-      igraph_t subg, gmap1;
-      igraph_vs_t vs;
-      char gname[100];
-      igraph_vector_t map2,X,Y;
-      int subdia;
-      igraph_vector_init(&Y,0);
-      sprintf(gname,"%s%d","subg",j);
-      igraph_vs_vector(&vs, &current);
-      igraph_vector_init(&map2,igraph_vector_size(&current));
-      igraph_induced_subgraph(g,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
-      igraph_diameter(&subg,&subdia,0,0,0,IGRAPH_UNDIRECTED,1);
-      printf("Subgraph Diameter=%d, Vertices=%d, Edges=%d",subdia,igraph_vcount(&subg),igraph_ecount(&subg));
-      int loc[subdia+1];
-      *isatfree = *isatfree & processForAT(&subg,gname,loc,&X,&Y,&map2,&gmap1);
-    }
 
   igraph_vector_destroy(&left);
   igraph_vector_destroy(&current);
@@ -607,6 +591,34 @@ void isATFree(igraph_t *g, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g
   igraph_vector_destroy(&fnn);
   igraph_vector_destroy(&cnn);
  }
+ 
+    /* For every level, extract the subgraph of the level and run the 
+     * complete process again 
+     * This is for AT (x,y,z) with all in the same level*/
+      igraph_t subg, gmap1;
+      igraph_vs_t vs;
+      igraph_vector_t map2,X,Y;
+      int subdia;
+      char ggname[100];
+      igraph_vector_init(&X,0);
+      igraph_vector_init(&map2,0);
+      igraph_vector_init(&Y,0);
+      igraph_empty(&gmap1, 0, IGRAPH_UNDIRECTED);
+      sprintf(ggname,"%s_subg%d",gname,j);
+      igraph_vs_vector(&vs, &tlevel);
+      igraph_vector_init(&map2,igraph_vector_size(&tlevel));
+      igraph_induced_subgraph(g,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
+      igraph_diameter(&subg,&subdia,0,0,0,IGRAPH_UNDIRECTED,1);
+      printf("Subgraph Diameter=%d, Vertices=%d, Edges=%d",subdia,igraph_vcount(&subg),igraph_ecount(&subg));
+      int loc[subdia+1];
+      *isatfree = *isatfree & processForAT(&subg,ggname,loc,&X,&Y,&map2,&gmap1);
+      igraph_vector_destroy(&tlevel);
+      igraph_vs_destroy(&vs);
+      igraph_vector_destroy(&X);
+      igraph_vector_destroy(&Y);
+      igraph_vector_destroy(&map2);
+      igraph_destroy(&gmap1);
+      igraph_destroy(&subg);
    }
 }
 
