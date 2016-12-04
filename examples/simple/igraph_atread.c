@@ -211,8 +211,8 @@ int main(int argc, char** argv) {
   igraph_bool_t iso1=0, iso2=0;
 //  isHamUsingLAD(&gmap1,&iso1, path1);
 //  isHamUsingVF2(&gmap1,&iso2, path2);
-  sprintf(sspos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",sname,isatfree1,oiso,iso1, path1,iso2, path2);
-  exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
+//  sprintf(sspos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",sname,isatfree1,oiso,iso1, path1,iso2, path2);
+//  exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 
   igraph_vs_t vs;
   igraph_vs_vector(&vs, &X);
@@ -254,8 +254,18 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   int n = igraph_vcount(g);
   int m = igraph_ecount(g);
 
+  igraph_empty(gmap1, n, IGRAPH_UNDIRECTED);
+  igraph_vector_init(map2,n);
+  igraph_vector_init(X,0);
+
   /* No point in moving ahead if there are no vertices or no edges */
-  if(n==0 || m==0) return 1;
+  if(n==0) return 1;
+
+  if(m==0) {
+    for(int i=0;i<n;i++)
+ 	igraph_vector_insert(X,0,i);
+    return 1;
+   }
 
   if(igraph_vector_size(Y)==0) {
 //  igraph_vector_t Y;
@@ -284,9 +294,9 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   igraph_vector_init(&label1,n);
   igraph_vector_init(&label2,n);
   igraph_vector_init(&map1,n);
-  igraph_vector_init(map2,n);
+//  igraph_vector_init(map2,n);
   igraph_vector_init(&invmap2,n);
-  igraph_vector_init(X,0);
+//  igraph_vector_init(X,0);
 //  igraph_vector_init(&Y,1);
 //  VECTOR(Y)[0] = rand()%n;
   
@@ -372,13 +382,13 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   exportToDot(g,loc,dia+1,sname,sspos,map2,0);
 
   /* Export mapped versions */
-  sprintf(sname,"maplbfs2-%s",gname);  
+/*  sprintf(sname,"maplbfs2-%s",gname);  
   sprintf(sspos,"Graph=%s (mapped),X=[],Y=[],ATFree=%d ",sname,isatfree);
   exportToDot(&gmap,loc,dia+1,sname,sspos,NULL,0);
 
   sprintf(sname,"remaplbfs2-%s",gname);  
   sprintf(sspos,"Graph=%s,X=[%s],Y=[%s],ATFree=%d ",sname,x,y,isatfree);
-  exportToDot(&gmap,loc,dia+1,sname,sspos,map2,1);
+  exportToDot(&gmap,loc,dia+1,sname,sspos,map2,1); */
 
   if(isatfree) printf("\nG is AT-Free");
   else printf("\nG is not AT-Free");
@@ -604,12 +614,12 @@ void isATFree(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isatfree
       igraph_vector_init(&map2,0);
       igraph_vector_init(&Y,0);
       igraph_empty(&gmap1, 0, IGRAPH_UNDIRECTED);
-      sprintf(ggname,"%s_subg%d",gname,j);
+      sprintf(ggname,"%s_subg%d",gname,i);
       igraph_vs_vector(&vs, &tlevel);
       igraph_vector_init(&map2,igraph_vector_size(&tlevel));
       igraph_induced_subgraph(g,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
       igraph_diameter(&subg,&subdia,0,0,0,IGRAPH_UNDIRECTED,1);
-      printf("Subgraph Diameter=%d, Vertices=%d, Edges=%d",subdia,igraph_vcount(&subg),igraph_ecount(&subg));
+      printf("\nL%d: Subgraph Diameter=%d, Vertices=%d, Edges=%d",i,subdia,igraph_vcount(&subg),igraph_ecount(&subg));
       int loc[subdia+1];
       *isatfree = *isatfree & processForAT(&subg,ggname,loc,&X,&Y,&map2,&gmap1);
       igraph_vector_destroy(&tlevel);
