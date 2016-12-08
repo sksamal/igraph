@@ -54,7 +54,8 @@ int main(int argc, char** argv) {
 /* VECTOR(Y)[0] = rand()%n;
 */
  /* Do LBFS and delete X in each step */
- for(int iter=0;igraph_vcount(&g)>0;iter++) {
+// for(int iter=0;igraph_vcount(&g)>0;iter++) {
+ for(int iter=0;iter<1;iter++) {
 
 /*  n = igraph_vcount(&g);
   m = igraph_ecount(&g);
@@ -327,7 +328,7 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
   sprintf(sname,"lbfs1-%s",gname);  
   sprintf(sspos,"Graph=%s,Y=[%s] , X=[%s]  ",sname,y,x);
-  exportToDot(g,loc,dia+1,sname,sspos,&map1,0);
+//  exportToDot(g,loc,dia+1,sname,sspos,&map1,0);
 
   igraph_vector_clear(Y);
   LBFS(g,X,Y,&label2,map2);
