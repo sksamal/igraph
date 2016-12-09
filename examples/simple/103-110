@@ -1,0 +1,8 @@
+103: Diameter 2 having an AT (1,3,9) in second level
+104: Diameter 2 with no AT, similar to 103, but edges 1-2 and 2-3 removed
+105: Diameter 3 having an AT (1,3,9) in second level - new vertex 12 added edges 4-12,7-12 added
+106: Diameter 3 having an AT (1,3,9) in second level - new vertex 12 added edges 5-12,6-12 added
+107: Diameter 3 having an AT (1,3,12) in 2nd and 4th level - edges 1-2 and 2-3 removed in atgraph105 
+108: Diameter 3 having no AT?  - edges 1-2 and 2-3 removed in atgraph106
+109: Diameter 4 - new vertex 13 and 12 added in atgraph103 with 4-12,6-12,5-13,6-13 connected
+110: Diameter 4 - new vertex 13 and 12 added in atgraph103 with 4-12,6-12,5-13,6-13 connected and 1-2 and 2-3 removed

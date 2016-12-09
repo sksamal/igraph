@@ -368,7 +368,7 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
  * to satisfy the local checkadds edges in g1 (which is essentially a copy of g)
  * to satisfy the local check . It takes j and it's current level non-neighbors as
  * input */
-igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1) {
+igraph_bool_t isLevelSatisfied_o(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1) {
 
    igraph_bool_t connected, atfree, isatfree=1;
 
@@ -434,5 +434,97 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 	/* No need to do the exact same thing with j 
          * as it will be covered when other vertices are explored*/
      }
+  return isatfree;		
+}
+
+/* This method checks the local AT-Free condition for vertices in same levels in both the directions. 
+ * Returns true if the localcheck worked, else adds edges in g1 (which is essentially a copy of g)
+ * to satisfy the local checkadds edges in g1 (which is essentially a copy of g)
+ * to satisfy the local check . It takes j and it's current level non-neighbors as
+ * input */
+igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1) {
+
+   igraph_bool_t connected, atfree, isatfree=1;
+
+   /* Get all neighbours */
+   igraph_vector_t jni;
+   igraph_vector_init(&jni, 1);
+   igraph_neighbors(g,&jni,j,IGRAPH_ALL);
+
+  /* For each current non-neighbors of j */ 
+  for (int i=0; i<igraph_vector_size(cnn)-1; i++) {
+    	int w = (int) VECTOR(*cnn)[i];
+
+        /* Get all neighbours of w */
+        igraph_vector_t ini;
+        igraph_vector_init(&ini, 1);
+        igraph_neighbors(g,&ini,w,IGRAPH_ALL);
+
+	/* All three conditions should hold good */
+	/* 1. One common neighbor should exist */
+	/* 2. One non-neighbor of j should exist N(w) */
+	/* 3 One non-neighbor of w should exist in N(j) */
+	igraph_vector_t inc,jnc,ijcc;
+	igraph_vector_init(&jnc,0);
+	igraph_vector_init(&inc,0);
+	igraph_vector_init(&ijcc,0);
+
+	igraph_vector_intersect_sorted(&ini,&jni,&ijcc);
+	igraph_vector_difference_sorted(&ini,&jni,&jnc);
+	igraph_vector_difference_sorted(&jni,&ini,&inc);
+	
+//	printf("\nSize: i=%d,j=%d,common=%d,inc=%d,jnc=%d",w,j,igraph_vector_size(&ijcc),
+//		igraph_vector_size(&inc),igraph_vector_size(&jnc));
+//	printf("\n\tijcc=");igraph_vector_print(&ijcc);
+//	printf(", inc=");igraph_vector_print(&inc);
+//	printf(", jnc=");igraph_vector_print(&jnc);
+	if(!igraph_vector_size(&inc) || !igraph_vector_size(&jnc)
+	   || !igraph_vector_size(&ijcc))  continue;
+
+	atfree=1;
+	igraph_vs_t vsi, vsj;
+	igraph_vs_vector(&vsi, &inc);
+	igraph_vs_vector(&vsj, &jnc);
+	igraph_vector_t ic, jc, ijc, injc;
+	igraph_vector_ptr_t ires, jres;
+	igraph_vector_init(&ic,0);
+	igraph_vector_init(&injc,0);
+	igraph_vector_init(&jc,0);
+	igraph_vector_ptr_init(&ires,0);
+	igraph_vector_ptr_init(&jres,0);
+	igraph_vector_init(&ijc,0);
+	igraph_neighborhood(g,&ires,vsi,1,IGRAPH_ALL,0);
+	for(int k=0;k<igraph_vector_ptr_size(&ires);k++) {
+		igraph_vector_t *v = VECTOR(ires)[k];
+		igraph_vector_append(&ic,v);
+	}
+	igraph_vector_difference_sorted(&ic,&ijcc,&injc);
+	igraph_neighborhood(g,&jres,vsj,1,IGRAPH_ALL,0);
+	for(int k=0;k<igraph_vector_ptr_size(&jres);k++) {
+		igraph_vector_t *v = VECTOR(jres)[k];
+		igraph_vector_append(&jc,v);
+	}
+//	printf("\n\tic=");igraph_vector_print(&ic);
+//	printf(", injc=");igraph_vector_print(&injc);
+//	printf(", jc=");igraph_vector_print(&jc);
+	igraph_vector_intersect_sorted(&injc,&jc,&ijc);
+//	printf(", ijc=");igraph_vector_print(&ijc);
+	if(igraph_vector_size(&ijc)!=0) {
+		atfree=0;
+		printf("\n(%d,%d,%d) form an AT",j,w,(int)VECTOR(ijc)[0]);
+	}
+	isatfree = isatfree & atfree;
+	igraph_vector_destroy(&inc);
+	igraph_vector_destroy(&jnc);
+	igraph_vector_destroy(&ijcc);
+	igraph_vector_destroy(&injc);
+	igraph_vector_destroy(&ic);
+	igraph_vector_destroy(&jc);
+	igraph_vector_destroy(&ijc);
+	igraph_vector_ptr_destroy(&ires);
+	igraph_vector_ptr_destroy(&jres);
+	igraph_vs_destroy(&vsi);
+	igraph_vs_destroy(&vsj);
+   }
   return isatfree;		
 }

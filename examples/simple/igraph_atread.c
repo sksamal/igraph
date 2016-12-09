@@ -589,12 +589,14 @@ void isATFree(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isatfree
       igraph_vector_init(&cnn,1);
       cutNeighbors(g,j,loc,&left,&current,&right);
       forwardNonNeighbors(g,j,loc,l,&fnn);
-//      currentNonNeighbors(g,j,loc,l,&cnn);
+      currentNonNeighbors(g,j,loc,l,&cnn);
 
     /*  For vertex j, is the local condition true ? , If not add edges
      *  in graph g1, which was originally a copy of g 
      *  This is for AT (x,y,z) in three different levels */   
       *isatfree = *isatfree & isDominSatisfied(g,j,loc,&fnn,g1);
+  
+      *isatfree = *isatfree & isLevelSatisfied(g,j,loc,&cnn,g1);
 
   igraph_vector_destroy(&left);
   igraph_vector_destroy(&current);
@@ -606,7 +608,7 @@ void isATFree(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isatfree
     /* For every level, extract the subgraph of the level and run the 
      * complete process again 
      * This is for AT (x,y,z) with all in the same level*/
-      igraph_t subg, gmap1;
+/*      igraph_t subg, gmap1;
       igraph_vs_t vs;
       igraph_vector_t map2,X,Y;
       int subdia;
@@ -629,7 +631,7 @@ void isATFree(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isatfree
       igraph_vector_destroy(&Y);
       igraph_vector_destroy(&map2);
       igraph_destroy(&gmap1);
-      igraph_destroy(&subg);
+      igraph_destroy(&subg); */
    }
 }
 
