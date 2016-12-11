@@ -383,10 +383,11 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   exportToDot(g,loc,dia+1,sname,sspos,map2,0);
 
   /* Export mapped versions */
-/*  sprintf(sname,"maplbfs2-%s",gname);  
+  sprintf(sname,"maplbfs2-%s",gname);  
   sprintf(sspos,"Graph=%s (mapped),X=[],Y=[],ATFree=%d ",sname,isatfree);
   exportToDot(&gmap,loc,dia+1,sname,sspos,NULL,0);
 
+/*
   sprintf(sname,"remaplbfs2-%s",gname);  
   sprintf(sspos,"Graph=%s,X=[%s],Y=[%s],ATFree=%d ",sname,x,y,isatfree);
   exportToDot(&gmap,loc,dia+1,sname,sspos,map2,1); */

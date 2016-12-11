@@ -473,11 +473,11 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 	igraph_vector_difference_sorted(&ini,&jni,&jnc);
 	igraph_vector_difference_sorted(&jni,&ini,&inc);
 	
-//	printf("\nSize: i=%d,j=%d,common=%d,inc=%d,jnc=%d",w,j,igraph_vector_size(&ijcc),
-//		igraph_vector_size(&inc),igraph_vector_size(&jnc));
-//	printf("\n\tijcc=");igraph_vector_print(&ijcc);
-//	printf(", inc=");igraph_vector_print(&inc);
-//	printf(", jnc=");igraph_vector_print(&jnc);
+	printf("\nSize: i=%d,j=%d,common=%d,inc=%d,jnc=%d",w,j,igraph_vector_size(&ijcc),
+		igraph_vector_size(&inc),igraph_vector_size(&jnc));
+	printf("\n\tijcc=");igraph_vector_print(&ijcc);
+	printf(", inc=");igraph_vector_print(&inc);
+	printf(", jnc=");igraph_vector_print(&jnc);
 	if(!igraph_vector_size(&inc) || !igraph_vector_size(&jnc)
 	   || !igraph_vector_size(&ijcc))  continue;
 
@@ -496,19 +496,27 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 	igraph_neighborhood(g,&ires,vsi,1,IGRAPH_ALL,0);
 	for(int k=0;k<igraph_vector_ptr_size(&ires);k++) {
 		igraph_vector_t *v = VECTOR(ires)[k];
-		igraph_vector_append(&ic,v);
+		for(int t=0;t<igraph_vector_size(v);t++) {
+		  int u = (int)VECTOR(*v)[t];
+		  if(!igraph_vector_contains(&ic,u))
+		     igraph_vector_insert(&ic,0,u);
+		  }
 	}
 	igraph_vector_difference_sorted(&ic,&ijcc,&injc);
 	igraph_neighborhood(g,&jres,vsj,1,IGRAPH_ALL,0);
 	for(int k=0;k<igraph_vector_ptr_size(&jres);k++) {
 		igraph_vector_t *v = VECTOR(jres)[k];
-		igraph_vector_append(&jc,v);
+		for(int t=0;t<igraph_vector_size(v);t++) {
+		  int u = (int)VECTOR(*v)[t];
+		  if(!igraph_vector_contains(&ic,u))
+		     igraph_vector_insert(&jc,0,u);
+		  }
 	}
-//	printf("\n\tic=");igraph_vector_print(&ic);
-//	printf(", injc=");igraph_vector_print(&injc);
-//	printf(", jc=");igraph_vector_print(&jc);
+	printf("\n\tic=");igraph_vector_print(&ic);
+	printf(", injc=");igraph_vector_print(&injc);
+	printf(", jc=");igraph_vector_print(&jc);
 	igraph_vector_intersect_sorted(&injc,&jc,&ijc);
-//	printf(", ijc=");igraph_vector_print(&ijc);
+	printf(", ijc=");igraph_vector_print(&ijc);
 	if(igraph_vector_size(&ijc)!=0) {
 		atfree=0;
 		printf("\n(%d,%d,%d) form an AT",j,w,(int)VECTOR(ijc)[0]);

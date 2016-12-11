@@ -48,6 +48,16 @@ genat: igraph_atgen igraph_atread
 	ssh ssamal@cse.unl.edu "igraph/convert.sh igraph/$$JID test$$a";\
 done ;
 
+testat: igraph_atread
+	./clean.sh \
+	ssh ssamal@cse.unl.edu "igraph/clean.sh igraph"; \
+	for file in `ls atgraph?.dot.edg atgraph???.dot.edg` ; do \
+        pre=`basename $$file .dot.edg`; \
+	./igraph_atread $$pre > $$pre.txt; \
+done ;
+	scp *atgraph?[0-9].dot *atgraph???[0-9].dot atgraph*.txt ssamal@cse.unl.edu:~/igraph/; \
+	ssh ssamal@cse.unl.edu "igraph/convert.sh igraph/ $$pre"; \
+
 run: igraph_atfree
 	./igraph_atfree aa.dot > aa.txt; \
 	dot -Kfdp -n aa.dot -Tpdf >aa.pdf; \
