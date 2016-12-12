@@ -463,7 +463,7 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 	/* All three conditions should hold good */
 	/* 1. One common neighbor should exist */
 	/* 2. One non-neighbor of j should exist N(w) */
-	/* 3 One non-neighbor of w should exist in N(j) */
+	/* 3. One non-neighbor of w should exist in N(j) */
 	igraph_vector_t inc,jnc,ijcc;
 	igraph_vector_init(&jnc,0);
 	igraph_vector_init(&inc,0);
@@ -496,6 +496,7 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 	igraph_neighborhood(g,&ires,vsi,1,IGRAPH_ALL,0);
 	for(int k=0;k<igraph_vector_ptr_size(&ires);k++) {
 		igraph_vector_t *v = VECTOR(ires)[k];
+		printf("\t\t(i)v=");igraph_vector_print(v);
 		for(int t=0;t<igraph_vector_size(v);t++) {
 		  int u = (int)VECTOR(*v)[t];
 		  if(!igraph_vector_contains(&ic,u))
@@ -506,9 +507,10 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 	igraph_neighborhood(g,&jres,vsj,1,IGRAPH_ALL,0);
 	for(int k=0;k<igraph_vector_ptr_size(&jres);k++) {
 		igraph_vector_t *v = VECTOR(jres)[k];
+		printf("\t\t(j)v=");igraph_vector_print(v);
 		for(int t=0;t<igraph_vector_size(v);t++) {
 		  int u = (int)VECTOR(*v)[t];
-		  if(!igraph_vector_contains(&ic,u))
+		  if(!igraph_vector_contains(&jc,u))
 		     igraph_vector_insert(&jc,0,u);
 		  }
 	}
