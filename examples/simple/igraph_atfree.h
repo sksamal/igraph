@@ -10,6 +10,7 @@
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
 igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1);
 igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1);
+igraph_bool_t isAdjSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1);
 void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *fnn);
 void currentNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *cnn);
 void getNeighbors(igraph_t* g,int j, int *loc,igraph_vector_t *ne, int dir);
@@ -116,9 +117,10 @@ void currentNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vecto
 }
 /* This method checks the local AT-Free condition in both the directions. Returns a 
  * true if the localcheck worked, else adds edges in g1 (which is essentially a copy of g)
- * to satisfy the local checkadds edges in g1 (which is essentially a copy of g)
  * to satisfy the local check . It takes j and it's forward non-neighbors as
- * input */
+ * input 
+ * It basically checks if it there is a dominating pair and if there are vertices 
+ * avoiding that - part of AT-Free condition*/
 igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1) {
 
    igraph_bool_t connected, atfree, isatfree=1;
@@ -363,12 +365,14 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 }
 
 
-/* This method checks the local AT-Free condition for vertices in same levels in both the directions. 
- * Returns true if the localcheck worked, else adds edges in g1 (which is essentially a copy of g)
- * to satisfy the local checkadds edges in g1 (which is essentially a copy of g)
+/* This method checks the local AT-Free condition for vertices in same level. In case where
+ * (x,y,z) belong to the same level and the AT doesnot involve a path using any of the other levels.
+ * We call such case as 1L-AT
+ * Returns true if the condition worked
  * to satisfy the local check . It takes j and it's current level non-neighbors as
- * input */
-igraph_bool_t isLevelSatisfied_o(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1) {
+ * input 
+ * Note: g1 functionality is not yet implemented */
+igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1) {
 
    igraph_bool_t connected, atfree, isatfree=1;
 
@@ -437,12 +441,15 @@ igraph_bool_t isLevelSatisfied_o(igraph_t* g, int j, int *loc, igraph_vector_t *
   return isatfree;		
 }
 
-/* This method checks the local AT-Free condition for vertices in same levels in both the directions. 
+/* This method checks a local AT-Free condition for certain vertices in same levels . 
+ * It detects an AT where atleast (x,y) belong to the same level, and z may belong to any level, but th * e AT is i* foemed using the adjacent levels. We call this as 2L-AT (AT-formed within two adjacent 
+ * levels)
  * Returns true if the localcheck worked, else adds edges in g1 (which is essentially a copy of g)
  * to satisfy the local checkadds edges in g1 (which is essentially a copy of g)
  * to satisfy the local check . It takes j and it's current level non-neighbors as
- * input */
-igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1) {
+ * input 
+ * Note: Right now, it doesnot add edges and return an AT-Free graph in g1*/
+igraph_bool_t isAdjSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1) {
 
    igraph_bool_t connected, atfree, isatfree=1;
 
@@ -450,11 +457,14 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
    igraph_vector_t jni;
    igraph_vector_init(&jni, 1);
    igraph_neighbors(g,&jni,j,IGRAPH_ALL);
+ //  printf("\nj=%d, jni=",j);igraph_vector_print(&jni);
 
   /* For each current non-neighbors of j */ 
   for (int i=0; i<igraph_vector_size(cnn)-1; i++) {
     	int w = (int) VECTOR(*cnn)[i];
 
+	if(igraph_vector_contains(&jni,w)) continue;	
+//	if(w<j) continue;
         /* Get all neighbours of w */
         igraph_vector_t ini;
         igraph_vector_init(&ini, 1);
@@ -469,15 +479,19 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 	igraph_vector_init(&inc,0);
 	igraph_vector_init(&ijcc,0);
 
+	igraph_vector_sort(&ini);
+	igraph_vector_sort(&jni);
 	igraph_vector_intersect_sorted(&ini,&jni,&ijcc);
 	igraph_vector_difference_sorted(&ini,&jni,&jnc);
 	igraph_vector_difference_sorted(&jni,&ini,&inc);
 	
-	printf("\nSize: i=%d,j=%d,common=%d,inc=%d,jnc=%d",w,j,igraph_vector_size(&ijcc),
-		igraph_vector_size(&inc),igraph_vector_size(&jnc));
-	printf("\n\tijcc=");igraph_vector_print(&ijcc);
-	printf(", inc=");igraph_vector_print(&inc);
-	printf(", jnc=");igraph_vector_print(&jnc);
+//	printf("\nSize: i=%d,j=%d,common=%d,inc=%d,jnc=%d",w,j,igraph_vector_size(&ijcc),
+//		igraph_vector_size(&inc),igraph_vector_size(&jnc));
+//	printf("ini=");igraph_vector_print(&ini);
+//	printf("jni=");igraph_vector_print(&jni);
+//	printf("\n\tijcc=");igraph_vector_print(&ijcc);
+//	printf(", inc=");igraph_vector_print(&inc);
+//	printf(", jnc=");igraph_vector_print(&jnc);
 	if(!igraph_vector_size(&inc) || !igraph_vector_size(&jnc)
 	   || !igraph_vector_size(&ijcc))  continue;
 
@@ -493,36 +507,56 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 	igraph_vector_ptr_init(&ires,0);
 	igraph_vector_ptr_init(&jres,0);
 	igraph_vector_init(&ijc,0);
+
+	/* A = Calculate N[N(i) not in N(j)] */
 	igraph_neighborhood(g,&ires,vsi,1,IGRAPH_ALL,0);
 	for(int k=0;k<igraph_vector_ptr_size(&ires);k++) {
 		igraph_vector_t *v = VECTOR(ires)[k];
-		printf("\t\t(i)v=");igraph_vector_print(v);
+//		printf("\t\t(i)v=");igraph_vector_print(v);
 		for(int t=0;t<igraph_vector_size(v);t++) {
 		  int u = (int)VECTOR(*v)[t];
-		  if(!igraph_vector_contains(&ic,u))
+		  if(!igraph_vector_contains(&ic,u) && !igraph_vector_contains(&inc,u))
 		     igraph_vector_insert(&ic,0,u);
 		  }
 	}
+	igraph_vector_sort(&ic);
 	igraph_vector_difference_sorted(&ic,&ijcc,&injc);
+
+	/* Calculate B = Calculate N[N(j) not in N(i)] */
 	igraph_neighborhood(g,&jres,vsj,1,IGRAPH_ALL,0);
 	for(int k=0;k<igraph_vector_ptr_size(&jres);k++) {
 		igraph_vector_t *v = VECTOR(jres)[k];
-		printf("\t\t(j)v=");igraph_vector_print(v);
+//		printf("\t\t(j)v=");igraph_vector_print(v);
 		for(int t=0;t<igraph_vector_size(v);t++) {
 		  int u = (int)VECTOR(*v)[t];
-		  if(!igraph_vector_contains(&jc,u))
+		  if(!igraph_vector_contains(&jc,u) && !igraph_vector_contains(&jnc,u))
 		     igraph_vector_insert(&jc,0,u);
 		  }
 	}
-	printf("\n\tic=");igraph_vector_print(&ic);
-	printf(", injc=");igraph_vector_print(&injc);
-	printf(", jc=");igraph_vector_print(&jc);
+	igraph_vector_sort(&jc);
+//	printf("\n\tic=");igraph_vector_print(&ic);
+//	printf(", injc=");igraph_vector_print(&injc);
+//	printf(", jc=");igraph_vector_print(&jc);
+
+	/* Calculate C = A intersect B , if none, then set AT-Free condition true*/	
 	igraph_vector_intersect_sorted(&injc,&jc,&ijc);
-	printf(", ijc=");igraph_vector_print(&ijc);
-	if(igraph_vector_size(&ijc)!=0) {
-		atfree=0;
-		printf("\n(%d,%d,%d) form an AT",j,w,(int)VECTOR(ijc)[0]);
+//	printf(", ijc=");igraph_vector_print(&ijc);
+	if(igraph_vector_size(&ijc)==0) continue;
+
+	for(int t=0;t<igraph_vector_size(&ijc);t++) {
+		int u = (int)VECTOR(ijc)[t];
+        	igraph_vector_t uni, ijnuc;
+        	igraph_vector_init(&uni, 0);
+        	igraph_vector_init(&ijnuc, 0);
+        	igraph_neighbors(g,&uni,u,IGRAPH_ALL);
+	 	igraph_vector_difference_sorted(&ijcc,&uni,&ijnuc);	
+		if(igraph_vector_size(&ijnuc)!=0) {
+		   atfree=0;
+//		if(u>j && u>w)   // Avoid duplicate messages
+		   printf("\n(%d,%d,%d) form an AT",j,w,u);
+	     }
 	}
+
 	isatfree = isatfree & atfree;
 	igraph_vector_destroy(&inc);
 	igraph_vector_destroy(&jnc);
@@ -535,6 +569,7 @@ igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cn
 	igraph_vector_ptr_destroy(&jres);
 	igraph_vs_destroy(&vsi);
 	igraph_vs_destroy(&vsj);
+//	printf("\nj=%d:atfree=%d, isATFree=%d",j,atfree, isatfree);
    }
   return isatfree;		
 }
