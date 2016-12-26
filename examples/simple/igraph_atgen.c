@@ -1,7 +1,7 @@
 /* -*- mode: C -*-  
  * Nov 1, 2016: Fix for there can be some vertices, that are connected to 
  *  		one side at a minimum (min requirement is no longer 2, just 1)
- *
+ * Generates a grid labelled graph, which can later by processed for AT Check
  * */
 
 #include <igraph.h>
@@ -129,4 +129,3 @@ int main(int argc, char** argv) {
   igraph_destroy(&g);
   return 0;
 }
-

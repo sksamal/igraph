@@ -2,6 +2,8 @@
  * Nov 1, 2016: Fix for there can be some vertices, that are connected to 
  *  		one side at a minimum (min requirement is no longer 2, just 1)
  *
+ * This program creates a random AT-Free graph based on MLEVELS , LSIZE and connectivity (conns)
+ * and cehcks the local AT-Free condition (note it doesnot check the complete sets of conditions yet) 
  * */
 
 #include <igraph.h>
