@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
   else 
 	printf("\nG is not AT-Free");
   /* Move all files to temp */
-  sprintf(sspos,"mv *%s* temp/",gname);
+  sprintf(sspos,"mv *%s* temp/; rm -rf temp/*%s*",gname,gname);
   system(sspos);
 //  exportToDot(&g,loc,dia+1,gname,sspos,&map2,1);
 
