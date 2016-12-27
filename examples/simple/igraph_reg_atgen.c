@@ -6,7 +6,7 @@
 #include <igraph.h>
 #include <math.h>
 #include "igraph_atfree.h"
-#define MAXV 100
+#define MAXV 80
 #define MAXR 7 
 
 int main(int argc, char** argv) {
@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
   igraph_t g;
   time_t t;
   srand((unsigned) time(&t));
-  int n = rand()%MAXV;
+  int n = 6 + rand()%MAXV;
   int r = 2 + rand()%MAXR;
   if(n%2!=0 && r%2!=0) r = r+1;
 
@@ -24,6 +24,9 @@ int main(int argc, char** argv) {
   if(argc>2)
     r = atoi(argv[2]);
  
+  /* turn on attribute handling */
+  igraph_i_set_attribute_table(&igraph_cattribute_table);
+
   /* Random k-regular graph */
   igraph_k_regular_game(&g, n, r, 0, 0);
 
@@ -47,8 +50,18 @@ int main(int argc, char** argv) {
   igraph_bool_t isatfree = processForAT(&g,gname,0,loc,&X,&Y,&map2,&gmap1);
   sprintf(sspos,"n=%d, r=%d, isatfree=%d",n,r,isatfree);
 
-  if(isatfree) printf("\nG is AT-Free");
-  else printf("\nG is not AT-Free");
+  if(isatfree)  {
+  	printf("\nG is AT-Free");
+  	sprintf(sspos,"atfs/%s.edg",gname);  
+  	FILE *fp = fopen(sspos,"w");
+  	igraph_write_graph_edgelist(&g, fp);
+  	fclose(fp);
+  }
+  else 
+	printf("\nG is not AT-Free");
+  /* Move all files to temp */
+  sprintf(sspos,"mv *%s* temp/",gname);
+  system(sspos);
 //  exportToDot(&g,loc,dia+1,gname,sspos,&map2,1);
 
   igraph_vector_destroy(&map2);

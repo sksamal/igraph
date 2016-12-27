@@ -50,3 +50,11 @@ done
 	pdfunite maa*.pdf mmaa.pdf; \
 	rm -f aa*.pdf maa*.pdf; \
 	zip -r maa.zip mmaa.pdf ccaa.pdf aa*.txt;
+
+testat: igraph_atread
+	./clean.sh; \
+	for file in `ls atgraph?.dot.edg atgraph???.dot.edg` ; do \
+        pre=`basename $$file .dot.edg`; \
+	./igraph_atread $$pre > $$pre.txt; \
+done
+	./convert.sh ./ ;
