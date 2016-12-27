@@ -13,6 +13,9 @@ int main(int argc, char** argv) {
   
   igraph_t g;
   time_t t;
+  int count=10;
+
+  while(count>0) {
   srand((unsigned) time(&t));
   int n = 6 + rand()%MAXV;
   int r = 2 + rand()%MAXR;
@@ -56,6 +59,7 @@ int main(int argc, char** argv) {
   	FILE *fp = fopen(sspos,"w");
   	igraph_write_graph_edgelist(&g, fp);
   	fclose(fp);
+	count--;
   }
   else 
 	printf("\nG is not AT-Free");
@@ -69,6 +73,6 @@ int main(int argc, char** argv) {
   igraph_vector_destroy(&Y);
   igraph_destroy(&gmap1);
   igraph_destroy(&g);
-
+  }
   return 0;
 }
