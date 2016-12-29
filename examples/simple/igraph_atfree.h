@@ -10,10 +10,12 @@
 #define LSIZE 7 
 
 void isATFree(igraph_t *g, char *gname, int depth, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1);
+void isDP(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isatfree, igraph_t *g1);
 void exportToDot(igraph_t *g, int *loc, int l, char *filename, char *text, igraph_vector_t *map, igraph_bool_t inverse);
 void LBFS(igraph_t *g, igraph_vector_t *Y, igraph_vector_t *X, igraph_vector_t *label, igraph_vector_t *map);
 void OrderGrid(igraph_t *g, int *loc, int l, igraph_vector_t *X, igraph_vector_t *map);
 igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph_vector_t *X, igraph_vector_t *Y, igraph_vector_t *map2, igraph_t *g1);
+igraph_bool_t processForDP(igraph_t *g, char *gname, int *loc, igraph_vector_t *X, igraph_vector_t *Y, igraph_vector_t *map2, igraph_t *g1);
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
 igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fnn, igraph_t *g1);
 igraph_bool_t isLevelSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *cnn, igraph_t *g1);
@@ -717,7 +719,7 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph
   igraph_copy(gmap1,&gmap);
   igraph_bool_t isatfree;
   isATFree(&gmap,gname,depth,loc,dia+1,&isatfree,gmap1);
-  
+
   /* Send the original mapped one */
   igraph_copy(gmap1,&gmap);
 
@@ -745,6 +747,166 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph
 //  igraph_destroy(&gmap1);
   igraph_destroy(&gmap);
   return isatfree;
+}
+
+/* This method takes a graph G (which is not yet ordered or arranged in grid) and orders it in a grid,
+ * calls the isDP function and returns back pokable sets in X and Y (if possible and unique), the 
+ * loc array, the mapped vector that can be used to ordered form from original graph.
+ * It also returns back DP graph constructed by isDP in gmap1 */ 
+igraph_bool_t processForDP(igraph_t *g, char *gname, int *loc, igraph_vector_t *X, igraph_vector_t *Y, igraph_vector_t *map2, igraph_t *gmap1)
+{
+  int n = igraph_vcount(g);
+  int m = igraph_ecount(g);
+
+  igraph_empty(gmap1, n, IGRAPH_UNDIRECTED);
+  igraph_vector_init(map2,n);
+  igraph_vector_init(X,0);
+
+  /* No point in moving ahead if there are no vertices or no edges */
+  if(n==0) return 1;
+
+  if(m==0) {
+    for(int i=0;i<n;i++)
+ 	igraph_vector_insert(X,0,i);
+    return 1;
+   }
+
+  if(igraph_vector_size(Y)==0) {
+//  igraph_vector_t Y;
+  igraph_vector_init(Y,1);
+  VECTOR(*Y)[0] = rand()%n;
+  }
+
+  printf("\n|[%s]Number of vertices=%d",gname,n);
+  printf(", Edges=%d",m);
+  igraph_integer_t result,dia;
+  igraph_vertex_connectivity(g,&result,1);
+  printf(" Vertex connectivity=%d",result);
+  igraph_diameter(g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
+  printf(", Diameter=%d",dia);
+
+  /* Randomly assign values in loc, just for printing */
+//  int loc[dia+1], 
+  int s = n/(dia+1);
+  for(int i=0;i<dia;i++) loc[i]=(i+1)*s;
+  loc[dia]=n;
+
+  /* Calculate dominating pair set */
+//  igraph_vector_t X,Y,label1,label2,map1,map2;
+  igraph_vector_t label1,label2,map1;//,map2;
+  igraph_vector_t invmap2;
+  igraph_vector_init(&label1,n);
+  igraph_vector_init(&label2,n);
+  igraph_vector_init(&map1,n);
+//  igraph_vector_init(map2,n);
+  igraph_vector_init(&invmap2,n);
+//  igraph_vector_init(X,0);
+//  igraph_vector_init(&Y,1);
+//  VECTOR(Y)[0] = rand()%n;
+  
+  char sspos[680];
+  char sname[200];
+
+  sprintf(sname,"%s",gname);  
+  sprintf(sspos,"Graph=%s",sname);
+  exportToDot(g,loc,dia+1,sname,sspos,NULL,0);
+  LBFS(g,Y,X,&label1,&map1);
+//  printf("\n Y="); igraph_vector_print(Y);
+//  printf(" X="); igraph_vector_print(X);
+
+  char x[100], y[100];
+  for(int i=0;i<igraph_vector_size(X);i++) {
+	if(i==0) sprintf(x,"%d",(int)VECTOR(*X)[0]);
+	else  	 sprintf(x,"%s %d",x,(int)VECTOR(*X)[i]);
+  }
+
+  for(int i=0;i<igraph_vector_size(Y);i++) {
+	if(i==0) sprintf(y,"%d",(int)VECTOR(*Y)[0]);
+	else  	 sprintf(y,"%s %d",y,(int)VECTOR(*Y)[i]);
+  }
+
+  igraph_vector_null(&map1);
+  OrderGrid(g,loc,dia+1,X,&map1);
+//  printf("\n Loc=");
+//  for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
+  sprintf(sname,"lbfs1-%s",gname);  
+  sprintf(sspos,"Graph=%s,Y=[%s] , X=[%s]  ",sname,y,x);
+//  exportToDot(g,loc,dia+1,sname,sspos,&map1,0);
+
+  igraph_vector_clear(Y);
+  LBFS(g,X,Y,&label2,map2);
+  printf("\n|X="); igraph_vector_print(X);
+  printf("|Y="); igraph_vector_print(Y);
+
+  for(int i=0;i<igraph_vector_size(X);i++) {
+	if(i==0) sprintf(x,"%d",(int)VECTOR(*X)[0]);
+	else  	 sprintf(x,"%s %d",x,(int)VECTOR(*X)[i]);
+  }
+
+  for(int i=0;i<igraph_vector_size(Y);i++) {
+	if(i==0) sprintf(y,"%d",(int)VECTOR(*Y)[0]);
+	else  	 sprintf(y,"%s %d",y,(int)VECTOR(*Y)[i]);
+  }
+
+  igraph_vector_null(map2);
+  OrderGrid(g,loc,dia+1,Y,map2);
+//  printf("\n Loc=");
+//  for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
+  //printf("\nmap1="); igraph_vector_print(&map1);
+  //printf("\nmap2="); igraph_vector_print(&map2);
+
+  /* We check AT-Free congition before printing */
+  // Map the graph to gmap 
+  igraph_t gmap; 
+  igraph_empty(&gmap, n, IGRAPH_UNDIRECTED);
+  for(int ii=0;ii<n;ii++) {
+    igraph_integer_t i = (int)VECTOR(*map2)[ii];
+    VECTOR(invmap2)[i] = ii;
+   }
+  for(int i=0;i<m;i++) {
+     igraph_integer_t from, to;
+     igraph_edge(g,i,&from,&to);
+     from=(int)VECTOR(invmap2)[from];
+     to=(int)VECTOR(invmap2)[to]; 
+     igraph_add_edge(&gmap,from,to);
+    }
+//   printf("\nmap2="); igraph_vector_print(&map2);
+//   printf("\ninvmap2="); igraph_vector_print(&invmap2);
+
+ /* Copy the graph to gmap1, check DP condition
+   *  and make it DP if it is not already */
+//  igraph_t gmap1;
+  igraph_copy(gmap1,&gmap);
+  igraph_bool_t isdp;
+  isDP(&gmap,gname,loc,dia+1,&isdp,gmap1);
+
+  /* Send the original mapped one */
+  igraph_copy(gmap1,&gmap);
+
+  /* Print the graph g with DP result */
+  sprintf(sname,"lbfs2-%s",gname);  
+  sprintf(sspos,"Graph=%s,X=[%s],Y=[%s],DP=%d ",sname,x,y,isdp);
+  exportToDot(g,loc,dia+1,sname,sspos,map2,0);
+
+  /* Export mapped versions */
+  sprintf(sname,"maplbfs2-%s",gname);  
+  sprintf(sspos,"Graph=%s (mapped),X=[],Y=[],DP=%d ",sname,isdp);
+  exportToDot(&gmap,loc,dia+1,sname,sspos,NULL,0);
+
+/*
+  sprintf(sname,"remaplbfs2-%s",gname);  
+  sprintf(sspos,"Graph=%s,X=[%s],Y=[%s],ATFree=%d ",sname,x,y,isatfree);
+  exportToDot(&gmap,loc,dia+1,sname,sspos,map2,1); */
+
+//  if(isatfree) printf("\nG is AT-Free");
+//  else printf("\nG is not AT-Free");
+ 
+  igraph_vector_destroy(&label1);
+  igraph_vector_destroy(&label2);
+  igraph_vector_destroy(&map1);
+//  igraph_destroy(&gmap1);
+  igraph_destroy(&gmap);
+  return isdp;
 }
 
 /* Size or l = number of levels 
@@ -999,6 +1161,49 @@ void isATFree(igraph_t *g, char *gname, int depth, int *loc, int l, igraph_bool_
    }
 }
 
+/* Checks if the g is a Dominating pair graph. Assumes that the graph is arranged in grid. Returns back 
+ * an DP graph in g1.
+ * NOTE: The process doesnot stop after finding an AT, it continues to process all the vertices
+ * Following condition is checked:
+ * (1) Non-adjacent vertices between consecutive levels - for AT along dominating path
+ */
+void isDP(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isdp, igraph_t *g1) {
+
+  igraph_vector_t left,current, right,fnn, cnn;
+  *isdp=1;
+  
+  /* For every vertex j, find the non-neighbors in adjacent levels 
+   * and apply the localATFree check 
+   *
+   * Also get the neighbors in the current levels and 
+   * apply the level check */
+  for(int i=0; i<l;i++) {
+    int j= (i==0)?0:loc[i-1];
+    for(; j<loc[i];j++)
+    {
+      igraph_vector_init(&left,1);
+      igraph_vector_init(&current,1);
+      igraph_vector_init(&right,1);
+      igraph_vector_init(&fnn,1);
+      igraph_vector_init(&cnn,1);
+      cutNeighbors(g,j,loc,&left,&current,&right);
+      forwardNonNeighbors(g,j,loc,l,&fnn);
+      currentNonNeighbors(g,j,loc,l,&cnn);
+
+    /*  For vertex j, is the local condition true ? , If not add edges
+     *  in graph g1, which was originally a copy of g 
+     *  This is for AT (x,y,z) in three different levels */   
+      *isdp = *isdp & isDominSatisfied(g,j,loc,&fnn,g1);
+ 
+  igraph_vector_destroy(&left);
+  igraph_vector_destroy(&current);
+  igraph_vector_destroy(&right);
+  igraph_vector_destroy(&fnn);
+  igraph_vector_destroy(&cnn);
+  }
+ }
+}
+
 /* Note: l= number of levels */
 void exportToDot(igraph_t *g, int *loc, int l, char *filename, char *text, igraph_vector_t *map, igraph_bool_t inverse ) {
 
@@ -1016,7 +1221,7 @@ void exportToDot(igraph_t *g, int *loc, int l, char *filename, char *text, igrap
     for(int j=o;j<loc[i];j++) {
   	if(!inverse && map !=NULL)  v = (int)VECTOR(*map)[j];
 	else 		v = j;
-  	char spos[8];
+  	char spos[80];
   	int low = (s-(loc[i]-o))/2;
 //	printf("\n\tj=%d, low=%d, loc[i]=%d, o=%d, scale=%f",j,low,loc[i],o,scale);
  	// SETVAS(&g, "fixedsize",j,"true");

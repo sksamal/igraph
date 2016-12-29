@@ -26,21 +26,6 @@ int main(int argc, char** argv) {
 
   /* turn on attribute handling */
   igraph_i_set_attribute_table(&igraph_cattribute_table);
-
-  /* Random graph using random degree sequence*/
-  printf("Vertices(n)=%d\n",n);
-/*  igraph_vector_t degs;
-  igraph_vector_init(&degs,n);
-
-  int sum=0;
-  for(int i=0;i<n;i++) {
-    VECTOR(degs)[i] = 2 + rand()%MAXD;
-    sum+=(int)VECTOR(degs)[i];
-  }
-  if(sum%2!=0) VECTOR(degs)[n-1]= (int)VECTOR(degs)[n-1]-1;
- 
-  igraph_degree_sequence_game(&g,&degs,NULL,IGRAPH_DEGSEQ_VL); 
-*/
   igraph_empty(&g,n,0);
  
   /* Step1 - Create a simple two-connected graph */
@@ -74,8 +59,8 @@ int main(int argc, char** argv) {
   igraph_vector_init(&Y,0);
   int dia;
   igraph_diameter(&g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
-  printf("Vertices=%d, Edges=%d, Diameter=%d",igraph_vcount(&g), igraph_ecount(&g),dia);
-  if(dia<=2) continue;
+  if(dia<=3) continue;
+  printf("\nVertices=%d, Edges=%d, Diameter=%d",igraph_vcount(&g), igraph_ecount(&g),dia);
 
   igraph_vector_t X;
   char sspos[680];
@@ -87,20 +72,20 @@ int main(int argc, char** argv) {
   sprintf(gname,"rand%d_%d_%d",n,dia,rand());
 
   /* Calculate dominating pair sets X and Y after arranging the graph 
-   * and see if it is ATFree */
-  igraph_bool_t isatfree = processForAT(&g,gname,0,loc,&X,&Y,&map2,&gmap1);
-  sprintf(sspos,"n=%d, isatfree=%d",n,isatfree);
+   * and see if it is DP */
+  igraph_bool_t isdp = processForDP(&g,gname,loc,&X,&Y,&map2,&gmap1);
+  sprintf(sspos,"n=%d, isdp=%d",n,isdp);
 
-  if(isatfree)  {
-  	printf("\nG is AT-Free");
-  	sprintf(sspos,"atfs/%s.dot.edg",gname);  
+  if(isdp)  {
+  	printf("\nG is DP Graph");
+  	sprintf(sspos,"dps/%s.dot.edg",gname);  
   	FILE *fp = fopen(sspos,"w");
   	igraph_write_graph_edgelist(&g, fp);
   	fclose(fp);
 	count--;
   }
   else 
-	printf("\nG is not AT-Free");
+	printf("\nG is not a DP Graph");
   /* Move all files to temp */
   sprintf(sspos,"mv *%s* temp/; rm -rf temp/*%s*",gname,gname);
   system(sspos);
