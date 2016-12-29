@@ -57,7 +57,8 @@ int main(int argc, char** argv) {
       	   igraph_add_edge(&g,i,d);
       }
      }
-  
+
+  /* Step2 - Add more edges based on an average degree */  
    int mdeg = n*(MIND + rand()%MAXD);
    while(mdeg>0) {
      int s = rand()%n;

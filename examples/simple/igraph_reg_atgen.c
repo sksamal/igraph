@@ -6,14 +6,14 @@
 #include <igraph.h>
 #include <math.h>
 #include "igraph_atfree.h"
-#define MAXV 80
+#define MAXV 50
 #define MAXR 7 
 
 int main(int argc, char** argv) {
   
   igraph_t g;
   time_t t;
-  int count=10;
+  int count=500;
 
   while(count>0) {
   srand((unsigned) time(&t));
@@ -31,13 +31,16 @@ int main(int argc, char** argv) {
   igraph_i_set_attribute_table(&igraph_cattribute_table);
 
   /* Random k-regular graph */
+  printf("n=%d,r=%d\n",n,r);
+  if(r>=n) continue;
   igraph_k_regular_game(&g, n, r, 0, 0);
 
   igraph_vector_t Y;
   igraph_vector_init(&Y,0);
   int dia;
   igraph_diameter(&g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
-  printf("Vertices=%d, Edges=%d, Diameter=%d, Radius=%d",igraph_vcount(&g), igraph_ecount(&g),dia,r);
+  printf("Vertices=%d, Edges=%d, Diameter=%d, Connectivity=%d",igraph_vcount(&g), igraph_ecount(&g),dia,r);
+  if(dia<=1) continue;
 
   igraph_vector_t X;
   char sspos[680];
@@ -55,7 +58,7 @@ int main(int argc, char** argv) {
 
   if(isatfree)  {
   	printf("\nG is AT-Free");
-  	sprintf(sspos,"atfs/%s.edg",gname);  
+  	sprintf(sspos,"atfs/%s.dot.edg",gname);  
   	FILE *fp = fopen(sspos,"w");
   	igraph_write_graph_edgelist(&g, fp);
   	fclose(fp);

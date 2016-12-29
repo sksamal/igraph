@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   if(argc < 2) { 
 	printf("\nUsage: %s <edgelistfile> \n\t file to read",argv[0]);
 	printf("\nExample: %s aa for (aa.dot.edg)",argv[0]);
-	exit(1);
+	exit(0);
    }
 
   char fileName[40];
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
   FILE *fp = fopen(fileName,"r");
   if(fp == NULL) {
      printf("\nFile %s not found",argv[1]); 
-     exit(1);
+     exit(0);
    }
   igraph_read_graph_edgelist(&g,fp,0,0);
 
@@ -44,6 +44,7 @@ int main(int argc, char** argv) {
 */
  igraph_vector_t Y;
  igraph_vector_init(&Y,0);
+ igraph_bool_t oiso, iso1, iso2;
 
  /* Do LBFS and delete X in each step */
 // for(int iter=0;igraph_vcount(&g)>0;iter++) {
@@ -67,7 +68,7 @@ int main(int argc, char** argv) {
   int loc[dia+1];
   igraph_t gmap1;
   igraph_vector_t map2;
-  sprintf(gname,"%s%d",argv[1],iter);
+  sprintf(gname,"%s_%d",argv[1],iter);
   /* Calculate dominating pair sets X and Y after arranging the graph 
    * and see if it is ATFree */
   igraph_bool_t isatfree = processForAT(&g,gname,0,loc,&X,&Y,&map2,&gmap1);
@@ -85,11 +86,15 @@ int main(int argc, char** argv) {
   if(isatfree1) printf("\nG' is AT-Free");
   else printf("\nG' is not AT-Free");
  
+  printf("\nV=%d,E=%d MV=%d,ME=%d",igraph_vcount(&g),igraph_ecount(&g),igraph_vcount(&gmap1),igraph_ecount(&gmap1));
+  igraph_simplify(&gmap1,1,1,NULL);
+  igraph_simplify(&g,1,1,NULL);
+  printf("\nV=%d,E=%d MV=%d,ME=%d",igraph_vcount(&g),igraph_ecount(&g),igraph_vcount(&gmap1),igraph_ecount(&gmap1));
   /* Write gmap1 to <at><file specified in stdin> */
 //  sprintf(sname,"at-%s",argv[1]);  
-  igraph_bool_t oiso=1;isHamiltonian(&gmap1,loc,dia+1);
+  oiso=isHamiltonian(&gmap1,loc,dia+1);
 //  if(oiso) 
-    sprintf(sname,"hat-%s%d",argv[1],iter);  
+    sprintf(sname,"hat-%s_%d",argv[1],iter);  
   sprintf(sspos,"Graph=%s, ATFree=%d,OurAlgo=%d",sname,isatfree1,oiso);
   exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 
@@ -98,7 +103,7 @@ int main(int argc, char** argv) {
   char path1[300], path2[300];
   path1[0]='\0';
   path2[0]='\0';
-  igraph_bool_t iso1=0, iso2=0;
+  iso1=-1, iso2=-1;
   isHamUsingLAD(&gmap1,&iso1, path1);
   isHamUsingVF2(&gmap1,&iso2, path2);
   sprintf(sspos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",sname,isatfree1,oiso,iso1, path1,iso2, path2);
@@ -115,7 +120,7 @@ int main(int argc, char** argv) {
          if((int)VECTOR(X)[i] < (int)VECTOR(Ytemp)[j])  VECTOR(Y)[j] = VECTOR(Y)[j] -1;
   igraph_vector_destroy(&Ytemp);
 
-  sprintf(sspos,"%s%d.dot.edg",argv[1],iter);  
+  sprintf(sspos,"%s_%d.dot.edg",argv[1],iter);  
   fp = fopen(sspos,"w");
   igraph_write_graph_edgelist(&g, fp);
   fclose(fp);
@@ -128,5 +133,17 @@ int main(int argc, char** argv) {
 
   igraph_vector_destroy(&Y);
   igraph_destroy(&g);
-  return 0;
+
+  if(oiso && (iso1 || iso2)) /* Ham-Ok */
+     return 1;
+  if(!oiso && (iso1==0 || iso2==0)) /* NonHam-ok */
+     return 2;
+  if(oiso && (iso1==0 || iso2==0)) /* Issue */
+     return 3;	
+  if(!oiso && (iso1 || iso2)) /* Issue */
+     return 4;
+  if(oiso && (iso1<0 && iso2 <0))  /* Ham, unverified */
+     return 5;
+  if(!oiso && (iso1<0 && iso2 <0)) /* NonHam, unverified */
+     return 6;
 }

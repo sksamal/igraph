@@ -717,6 +717,9 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph
   igraph_copy(gmap1,&gmap);
   igraph_bool_t isatfree;
   isATFree(&gmap,gname,depth,loc,dia+1,&isatfree,gmap1);
+  
+  /* Send the original mapped one */
+  igraph_copy(gmap1,&gmap);
 
   /* Print the graph g with ATFree result */
   sprintf(sname,"lbfs2-%s",gname);  
