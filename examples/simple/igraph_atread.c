@@ -129,13 +129,13 @@ int main(int argc, char** argv) {
   igraph_destroy(&gmap1);
   igraph_destroy(&gmap2);
   igraph_vs_destroy(&vs);
+  if(!isatfree)  /* Not AT-Free */
+     return 7;
  }
 
   igraph_vector_destroy(&Y);
   igraph_destroy(&g);
 
-  if(!isatfree)  /* Not AT-Free */
-     return 7;
   if(oiso && (iso1 || iso2)) /* Ham-Ok */
      return 1;
   if(!oiso && (iso1==0 || iso2==0)) /* NonHam-ok */
