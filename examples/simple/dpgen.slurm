@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --time=07:00:00          # Run time in hh:mm:ss
-#SBATCH --mem-per-cpu=3500mb
+#SBATCH --mem-per-cpu=9500mb
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --job-name=dpgen

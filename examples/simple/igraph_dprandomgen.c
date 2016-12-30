@@ -76,16 +76,24 @@ int main(int argc, char** argv) {
   igraph_bool_t isdp = processForDP(&g,gname,loc,&X,&Y,&map2,&gmap1);
   sprintf(sspos,"n=%d, isdp=%d",n,isdp);
 
-  if(isdp)  {
-  	printf("\nG is DP Graph");
+  if(isdp)  printf("\nG is DP Graph");
+  else 	printf("\nG is not a DP Graph");
+
+  igraph_t gmap2;
+  igraph_copy(&gmap2,&gmap1);
+  isDP(&gmap1,gname,loc,dia+1,&isdp,&gmap2);
+  if(isdp) 
+   {
+  	printf("\nG' is DP Graph");
   	sprintf(sspos,"dps/%s.dot.edg",gname);  
   	FILE *fp = fopen(sspos,"w");
   	igraph_write_graph_edgelist(&g, fp);
   	fclose(fp);
 	count--;
-  }
-  else 
-	printf("\nG is not a DP Graph");
+   }
+  else     
+	printf("\nG' is not a DP Graph");
+	
   /* Move all files to temp */
   sprintf(sspos,"mv *%s* temp/; rm -rf temp/*%s*",gname,gname);
   system(sspos);
@@ -96,6 +104,7 @@ int main(int argc, char** argv) {
   igraph_vector_destroy(&Y);
   igraph_destroy(&gmap1);
   igraph_destroy(&g);
+  igraph_destroy(&gmap2);
   }
   return 0;
 }

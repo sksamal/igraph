@@ -163,25 +163,23 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  int u = (int) VECTOR(kbni)[l];
 	          igraph_are_connected(g,u,j,&connected);
 		  if(!connected) {
-		     if(atfree) printf("\nF(%d,%d): (",w,j);
+//		     if(atfree) printf("\nB(%d,%d): (",w,j);
 		     atfree=0;
-		     //printf("Connect %d---%d and ",u,j);
 		     /* Did I connect it already(just now?) */
 		     igraph_are_connected(g1,u,j,&connected);
 //		     if(!connected) printf("Connect %d---%d and ",u,j);
 		     if(shallAdd && !connected) igraph_add_edge(g1,u,j);
 		  }
 	        }
-//		if(shallAdd) printf("*");
+//		if(!atfree) { if(shallAdd) printf(")* "); else printf(") "); }
                 /* If not atfree, and edges are not added to backward neighbors earlier,
                  * add edge (v,j) in g1 */ 
 		if(!atfree) {
 		  /* Did I connect it already(just now?) */
-		 // printf(") OR (Connect %d---%d)",v,j);
 		  igraph_are_connected(g1,v,j,&connected);
-//		  if(!connected) printf(") OR (Connect %d---%d)",v,j);
+//		  if(!connected) printf("OR (Connect %d---%d)",v,j);
 		  if(!connected && !shallAdd) igraph_add_edge(g1,v,j);
-		  if(!shallAdd) printf("*");
+//		  if(!shallAdd) printf("*");
 		}
 		isatfree=isatfree & atfree;
 		igraph_vector_destroy(&kbni);
@@ -226,17 +224,17 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  if(!connected) {
 //		     if(atfree) printf("\nF(%d,%d): ( ",j,w);
 		     atfree=0;
-//		     printf("Connect %d---%d and ",u,w);
 		     igraph_are_connected(g1,u,w,&connected);
+//		     if(!connected) printf("Connect %d---%d and ",u,w);
 		     if(shallAdd && !connected) igraph_add_edge(g1,u,w); 
 		  }
 	        } 
-		if(shallAdd) printf("*");
+//		if(!atfree) {if(shallAdd) printf(")* "); else printf(") "); }
 		if(!atfree) {
-//		  printf(") OR (Connect %d---%d)",v,w);
 		  igraph_are_connected(g1,v,w,&connected);
+//		  if(!connected) printf("OR (Connect %d---%d)",v,w);
 		  if(!connected && !shallAdd) igraph_add_edge(g1,v,w);
-		  if(!connected && !shallAdd) printf("*");
+//		  if(!connected && !shallAdd) printf("*");
 	        }
 		isatfree=isatfree & atfree;
 		igraph_vector_destroy(&kbni);
@@ -811,8 +809,8 @@ igraph_bool_t processForDP(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   sprintf(sspos,"Graph=%s",sname);
   exportToDot(g,loc,dia+1,sname,sspos,NULL,0);
   LBFS(g,Y,X,&label1,&map1);
-//  printf("\n Y="); igraph_vector_print(Y);
-//  printf(" X="); igraph_vector_print(X);
+//  printf("\n|Y="); igraph_vector_print(Y);
+//  printf("|X="); igraph_vector_print(X);
 
   char x[100], y[100];
   for(int i=0;i<igraph_vector_size(X);i++) {
@@ -881,7 +879,7 @@ igraph_bool_t processForDP(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   isDP(&gmap,gname,loc,dia+1,&isdp,gmap1);
 
   /* Send the original mapped one */
-  igraph_copy(gmap1,&gmap);
+//  igraph_copy(gmap1,&gmap);
 
   /* Print the graph g with DP result */
   sprintf(sname,"lbfs2-%s",gname);  
@@ -990,7 +988,7 @@ void LBFS(igraph_t *g, igraph_vector_t *vstart, igraph_vector_t *X, igraph_vecto
 //	printf("v=%d",v);
      } 
 
-  /*   printf("\n LLabels are: ");
+ /*    printf("\n LLabels are: ");
      for(int i=0;i<igraph_strvector_size(&llabel);i++) { 
 	char *tmplabel;
  	igraph_strvector_get(&llabel,i,&tmplabel);
@@ -1171,7 +1169,9 @@ void isDP(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isdp, igraph
 
   igraph_vector_t left,current, right,fnn, cnn;
   *isdp=1;
-  
+ 
+  igraph_t g2;
+  igraph_copy(&g2,g1); 
   /* For every vertex j, find the non-neighbors in adjacent levels 
    * and apply the localATFree check 
    *
@@ -1193,15 +1193,18 @@ void isDP(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isdp, igraph
     /*  For vertex j, is the local condition true ? , If not add edges
      *  in graph g1, which was originally a copy of g 
      *  This is for AT (x,y,z) in three different levels */   
-      *isdp = *isdp & isDominSatisfied(g,j,loc,&fnn,g1);
- 
-  igraph_vector_destroy(&left);
-  igraph_vector_destroy(&current);
-  igraph_vector_destroy(&right);
-  igraph_vector_destroy(&fnn);
-  igraph_vector_destroy(&cnn);
+      igraph_bool_t islocaldp = isDominSatisfied(&g2,j,loc,&fnn,g1);
+      *isdp = *isdp & islocaldp;
+      if(!islocaldp) igraph_copy(&g2,g1); 
+
+      igraph_vector_destroy(&left);
+      igraph_vector_destroy(&current);
+      igraph_vector_destroy(&right);
+      igraph_vector_destroy(&fnn);
+      igraph_vector_destroy(&cnn);
   }
  }
+  igraph_destroy(&g2);
 }
 
 /* Note: l= number of levels */

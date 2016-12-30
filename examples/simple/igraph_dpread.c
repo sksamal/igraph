@@ -71,20 +71,20 @@ int main(int argc, char** argv) {
   sprintf(gname,"%s_%d",argv[1],iter);
   /* Calculate dominating pair sets X and Y after arranging the graph 
    * and see if it is ATFree */
-  igraph_bool_t isatfree = processForAT(&g,gname,0,loc,&X,&Y,&map2,&gmap1);
+  igraph_bool_t isdp = processForDP(&g,gname,loc,&X,&Y,&map2,&gmap1);
 
-  if(isatfree) printf("\nG is AT-Free");
-  else printf("\nG is not AT-Free");
+  if(isdp) printf("\nG is DP");
+  else printf("\nG is not DP");
 
   /* Finally run the same test on vertices of gmap1 (already arranged)
    * to make sure it is AT-Free */
   igraph_t gmap2;
   igraph_copy(&gmap2,&gmap1);
-  int isatfree1=1;
-  isATFree(&gmap1,gname,0,loc,dia+1,&isatfree1,&gmap2);
+  int isdp1=1;
+  isDP(&gmap1,gname,loc,dia+1,&isdp1,&gmap2);
 
-  if(isatfree1) printf("\nG' is AT-Free");
-  else printf("\nG' is not AT-Free");
+  if(isdp1) printf("\nG' is DP");
+  else printf("\nG' is not DP");
  
   printf("\nV=%d,E=%d MV=%d,ME=%d",igraph_vcount(&g),igraph_ecount(&g),igraph_vcount(&gmap1),igraph_ecount(&gmap1));
   igraph_simplify(&gmap1,1,1,NULL);
@@ -94,8 +94,8 @@ int main(int argc, char** argv) {
 //  sprintf(sname,"at-%s",argv[1]);  
   oiso=isHamiltonian(&gmap1,loc,dia+1);
 //  if(oiso) 
-    sprintf(sname,"hat-%s_%d",argv[1],iter);  
-  sprintf(sspos,"Graph=%s, ATFree=%d,OurAlgo=%d",sname,isatfree1,oiso);
+    sprintf(sname,"hdp-%s_%d",argv[1],iter);  
+  sprintf(sspos,"Graph=%s, DP=%d,OurAlgo=%d",sname,isdp1,oiso);
   exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 
   /* Run the LAD and VFS isomorphism algorithms 
@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
   iso1=-1, iso2=-1;
   isHamUsingLAD(&gmap1,&iso1, path1);
   isHamUsingVF2(&gmap1,&iso2, path2);
-  sprintf(sspos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",sname,isatfree1,oiso,iso1, path1,iso2, path2);
+  sprintf(sspos,"Graph=%s, DP=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",sname,isdp1,oiso,iso1, path1,iso2, path2);
   exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 
   igraph_vs_t vs;
@@ -134,8 +134,6 @@ int main(int argc, char** argv) {
   igraph_vector_destroy(&Y);
   igraph_destroy(&g);
 
-  if(!isatfree)  /* Not AT-Free */
-     return 7;
   if(oiso && (iso1 || iso2)) /* Ham-Ok */
      return 1;
   if(!oiso && (iso1==0 || iso2==0)) /* NonHam-ok */
