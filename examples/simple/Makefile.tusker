@@ -15,7 +15,9 @@ CFLAGS=-g
 OBJ_DIR=.
 SRC_DIR=.
 
-all : 
+all : igraph_atfree igraph_atdegseqgen igraph_dprandomgen igraph_reg_atgen igraph_atrandomgen igraph_atfree igraph_atread igraph_atgen igraph_dpread 
+
+alll :
 	for file in *.c ; do \
 	make `basename $$file .c`; \
 done
