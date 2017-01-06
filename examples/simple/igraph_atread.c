@@ -136,6 +136,7 @@ int main(int argc, char** argv) {
  }
 
   igraph_vector_destroy(&Y);
+  printf("MinPaths=",minPaths(&g,0));
   igraph_destroy(&g);
 
   if(oiso && (iso1 || iso2)) /* Ham-Ok */

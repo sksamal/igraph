@@ -14,6 +14,7 @@ void isDP(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isatfree, ig
 void exportToDot(igraph_t *g, int *loc, int l, char *filename, char *text, igraph_vector_t *map, igraph_bool_t inverse);
 void LBFS(igraph_t *g, igraph_vector_t *Y, igraph_vector_t *X, igraph_vector_t *label, igraph_vector_t *map);
 void OrderGrid(igraph_t *g, int *loc, int l, igraph_vector_t *X, igraph_vector_t *map);
+int minPaths(igraph_t* g, int depth); 
 igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph_vector_t *X, igraph_vector_t *Y, igraph_vector_t *map2, igraph_t *g1);
 igraph_bool_t processForDP(igraph_t *g, char *gname, int *loc, igraph_vector_t *X, igraph_vector_t *Y, igraph_vector_t *map2, igraph_t *g1);
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
@@ -308,7 +309,7 @@ void isHamUsingVF2(igraph_t *g, igraph_bool_t *iso,char *path) {
   igraph_destroy(&ring);
 }
 
-/* Our algorithm for necessay condition of Hamiltonian cycle in ATFree graph
+/* Our algorithm for necessary condition of Hamiltonian cycle in ATFree graph
  * */
 igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 
@@ -389,6 +390,79 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 	 printf("%d ",extra[l]); 
 	return isHamiltonian;
 
+}
+
+/* Experimental approach */
+int minPaths(igraph_t* g, int depth) {
+
+  igraph_vector_t map1, map2, *X, *Y, label1, label2;
+  int n = igraph_vcount(g);
+  int m = igraph_ecount(g);
+
+  /* No point in moving ahead if there are no vertices or no edges */
+  if(n==0 || n==1) return n;
+  if(m==0) return n;
+
+  igraph_vector_init(&map1,n);
+  igraph_vector_init(&map2,n);
+  igraph_vector_init(&label1,n);
+  igraph_vector_init(&label2,n);
+  igraph_vector_init(X,0);
+  igraph_vector_init(Y,1);
+  VECTOR(*Y)[0] = rand()%n;
+
+  printf("\n|[%s]Number of vertices=%d",depth,n);
+  printf(", Edges=%d",m);
+  igraph_integer_t result,dia;
+  igraph_diameter(g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
+  printf(", Diameter=%d",dia);
+
+  /* Randomly assign values in loc, just for printing */
+  int loc[dia+1];
+  int s = n/(dia+1);
+  for(int i=0;i<dia;i++) loc[i]=(i+1)*s;
+  loc[dia]=n;
+
+  /*Run LBFS */
+  LBFS(g,Y,X,&label1,&map1);
+ 
+  /* Align to Grid */
+  igraph_vector_null(&map1);
+  OrderGrid(g,loc,dia+1,X,&map1);
+
+  /* Run LBFS again from other-side */
+  igraph_vector_clear(Y);
+  LBFS(g,X,Y,&label2,&map2);
+
+  /* Map to grid again */
+  igraph_vector_null(&map2);
+  OrderGrid(g,loc,dia+1,Y,&map2);
+
+   int paths=0;
+  /* Get the subgraphs for each level and recursively call the method if 
+   * it has any edges */ 
+   for(int i=0; i<dia+1; i++)
+    {
+      int j= (i==0)?0:loc[i-1];
+      igraph_t subg;
+      igraph_vs_t vs;
+      igraph_vs_seq(&vs,j,loc[i]-1);
+      igraph_induced_subgraph(g,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
+      paths= paths + minPaths(&subg, depth+1) - 1;
+    }
+
+  igraph_vector_destroy(X);
+  igraph_vector_destroy(Y);
+  igraph_vector_destroy(&label1);
+  igraph_vector_destroy(&label2);
+  igraph_vector_destroy(&map1);
+  igraph_vector_destroy(&map2);
+  igraph_destroy(&subg);
+
+
+
+  /* Finally return the minimum number of paths possible */
+     return paths;
 }
 
 
