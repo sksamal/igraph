@@ -34,8 +34,10 @@ int main(int argc, char** argv) {
      printf("\nFile %s not found",argv[1]); 
      exit(0);
    }
-  igraph_read_graph_edgelist(&g,fp,0,0);
-
+  //igraph_read_graph_edgelist(&g,fp,0,0);
+  char desc[100];
+  read_graph_edgelist(&g,desc,fp,0,0);
+  printf("\nDesc:%s",desc);
 /* 
  int n = igraph_vcount(&g);
  int m = igraph_ecount(&g);
@@ -95,7 +97,7 @@ int main(int argc, char** argv) {
   oiso=isHamiltonian(&gmap1,loc,dia+1);
 //  if(oiso) 
     sprintf(sname,"hat-%s_%d",argv[1],iter);  
-  sprintf(sspos,"Graph=%s, ATFree=%d,OurAlgo=%d",sname,isatfree1,oiso);
+  sprintf(sspos,"Graph=%s, ATFree=%d,OurAlgo=%d\nDesc:%s",sname,isatfree1,oiso,desc);
   exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 
   /* Run the LAD and VFS isomorphism algorithms 
@@ -106,7 +108,7 @@ int main(int argc, char** argv) {
   iso1=-1, iso2=-1;
   isHamUsingLAD(&gmap1,&iso1, path1);
   isHamUsingVF2(&gmap1,&iso2, path2);
-  sprintf(sspos,"Graph=%s, AT-Free=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",sname,isatfree1,oiso,iso1, path1,iso2, path2);
+  sprintf(sspos,"Graph=%s, AT-Free=%d,OurAlgo=%d\nDesc:%sLAD=%d [%s],\nVF2=%d [%s] ",sname,isatfree1,oiso,desc,iso1, path1,iso2, path2);
   exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 
   igraph_vs_t vs;

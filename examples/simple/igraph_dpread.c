@@ -70,14 +70,14 @@ int main(int argc, char** argv) {
   igraph_vector_t map2;
   sprintf(gname,"%s_%d",argv[1],iter);
   /* Calculate dominating pair sets X and Y after arranging the graph 
-   * and see if it is ATFree */
+   * and see if it is DP */
   igraph_bool_t isdp = processForDP(&g,gname,loc,&X,&Y,&map2,&gmap1);
 
   if(isdp) printf("\nG is DP");
   else printf("\nG is not DP");
 
   /* Finally run the same test on vertices of gmap1 (already arranged)
-   * to make sure it is AT-Free */
+   * to make sure it is DP */
   igraph_t gmap2;
   igraph_copy(&gmap2,&gmap1);
   int isdp1=1;

@@ -10,6 +10,7 @@
 #define MIND 0 
 #define MAXV 70
 #define MAXD 20
+#define MINDIA 6 
 
 int main(int argc, char** argv) {
   
@@ -23,6 +24,10 @@ int main(int argc, char** argv) {
 
   if(argc>1)
     n = atoi(argv[1]);
+
+  int mindia=MINDIA;
+  if(argc>2)
+   mindia = atoi(argv[2]);
 
   /* turn on attribute handling */
   igraph_i_set_attribute_table(&igraph_cattribute_table);
@@ -59,7 +64,7 @@ int main(int argc, char** argv) {
   igraph_vector_init(&Y,0);
   int dia;
   igraph_diameter(&g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
-  if(dia<=3) continue;
+  if(dia<mindia) continue;
   printf("\nVertices=%d, Edges=%d, Diameter=%d",igraph_vcount(&g), igraph_ecount(&g),dia);
 
   igraph_vector_t X;

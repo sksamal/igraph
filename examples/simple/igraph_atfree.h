@@ -26,6 +26,7 @@ void getNeighbors(igraph_t* g,int j, int *loc,igraph_vector_t *ne, int dir);
 igraph_bool_t isHamiltonian(igraph_t* g, int *loc, int l);
 void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path);
 void isHamUsingVF2(igraph_t *g, igraph_bool_t *iso,char *path);
+int read_graph_edgelist(igraph_t *graph, char *description, FILE *instream, igraph_integer_t n, igraph_bool_t directed); 
 
 // dir=-1 means left, dir=0 current, dir=1 means right 
 /* Get the forward or backward or current neighbor based on the value of dir */
@@ -43,6 +44,21 @@ void getNeighbors(igraph_t* g, int j, int *loc, igraph_vector_t *ne, int dir) {
       igraph_vector_destroy(&left);
       igraph_vector_destroy(&current);
       igraph_vector_destroy(&right);
+}
+
+/* Same as igraph_read_graph_edgelist with ability to read description */
+int read_graph_edgelist(igraph_t *graph, char *description, FILE *instream, igraph_integer_t n, igraph_bool_t directed) {
+
+  /* read comment from first line then pass it to the original function */
+     size_t len;
+     int c = getc (instream);
+     if(c == '-')
+     {	getline(&description,&len,instream);
+/*	printf("Description: %s",description);*/	}
+     else
+     { 	ungetc (c, instream); description[0]='\0'; 	}
+
+     return igraph_read_graph_edgelist(graph,instream,n,directed); 
 }
 
 /* This method cuts the neighbors of a vertex v into left, right and current neighbors
@@ -319,7 +335,7 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
    	   igraph_vector_t snei;
     	   igraph_vector_init(&snei,1);
 	   getNeighbors(g,start+i,loc,&snei,0); 
-  //     	   printf("\n\t start=%d, start+i=%d,visited[i]=%d size(snei)=%d cc=%d",start,start+i,visited[i],igraph_vector_size(&snei)-1,cc);
+  //     	   printf("\n\t start=%d, start+i=%d,visited[i]=%d size(snei)=%d cc=%d",start,start+i,visited[i],igraph_vector_size(&snei)-1,minc[l]);
 	   for (int k=0; k<igraph_vector_size(&snei)-1; k++) {
 	  	int u = (int) VECTOR(snei)[k];
 	  	if(visited[u-start]==0) visited[u-start]=abs(visited[i]);
