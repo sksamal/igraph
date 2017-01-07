@@ -113,6 +113,7 @@ int main(int argc, char** argv) {
 
   igraph_vs_t vs;
   igraph_vs_vector(&vs, &X);
+  printf("\nMinPaths=%d\n",minPaths(&g,argv[1],0,&Y));
   printf("\nIter%d :Deleting vertices.. ",iter);igraph_vector_print(&X);
   igraph_delete_vertices(&g,vs);
   igraph_vector_t Ytemp;
@@ -136,7 +137,6 @@ int main(int argc, char** argv) {
  }
 
   igraph_vector_destroy(&Y);
-  printf("MinPaths=",minPaths(&g,0));
   igraph_destroy(&g);
 
   if(oiso && (iso1 || iso2)) /* Ham-Ok */

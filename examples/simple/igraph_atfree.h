@@ -14,7 +14,7 @@ void isDP(igraph_t *g, char *gname, int *loc, int l, igraph_bool_t *isatfree, ig
 void exportToDot(igraph_t *g, int *loc, int l, char *filename, char *text, igraph_vector_t *map, igraph_bool_t inverse);
 void LBFS(igraph_t *g, igraph_vector_t *Y, igraph_vector_t *X, igraph_vector_t *label, igraph_vector_t *map);
 void OrderGrid(igraph_t *g, int *loc, int l, igraph_vector_t *X, igraph_vector_t *map);
-int minPaths(igraph_t* g, int depth); 
+int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y); 
 igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph_vector_t *X, igraph_vector_t *Y, igraph_vector_t *map2, igraph_t *g1);
 igraph_bool_t processForDP(igraph_t *g, char *gname, int *loc, igraph_vector_t *X, igraph_vector_t *Y, igraph_vector_t *map2, igraph_t *g1);
 void cutNeighbors(igraph_t* g,int j,int *loc,igraph_vector_t *bni, igraph_vector_t *cni, igraph_vector_t *nni);
@@ -393,29 +393,36 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 }
 
 /* Experimental approach */
-int minPaths(igraph_t* g, int depth) {
+int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 
-  igraph_vector_t map1, map2, *X, *Y, label1, label2;
+  igraph_vector_t map1, map2, X, label1, label2;
   int n = igraph_vcount(g);
   int m = igraph_ecount(g);
 
+  char depthstring[20] = "-\0";
+//  for(int i=0;i<depth;i++) sprintf(depthstring,"%s--",depthstring);
+
+  printf("\n[%s]|%s Number of vertices=%d",gname,depthstring,n);
+  printf(", Edges=%d",m);
+  igraph_integer_t dia;
+  igraph_diameter(g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
+  printf(", Diameter=%d",dia);
+
   /* No point in moving ahead if there are no vertices or no edges */
-  if(n==0 || n==1) return n;
-  if(m==0) return n;
+  if(n==0 || n==1 || m==0) { 
+  printf("\n[%s]|%s L%d paths=%d",gname,depthstring,0,n);
+  return n;
+  }
 
   igraph_vector_init(&map1,n);
   igraph_vector_init(&map2,n);
   igraph_vector_init(&label1,n);
   igraph_vector_init(&label2,n);
-  igraph_vector_init(X,0);
-  igraph_vector_init(Y,1);
-  VECTOR(*Y)[0] = rand()%n;
-
-  printf("\n|[%s]Number of vertices=%d",depth,n);
-  printf(", Edges=%d",m);
-  igraph_integer_t result,dia;
-  igraph_diameter(g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
-  printf(", Diameter=%d",dia);
+  igraph_vector_init(&X,0);
+  if(igraph_vector_size(Y)==0) {
+  	igraph_vector_init(Y,1);
+  	VECTOR(*Y)[0] = rand()%n;
+    }
 
   /* Randomly assign values in loc, just for printing */
   int loc[dia+1];
@@ -424,21 +431,22 @@ int minPaths(igraph_t* g, int depth) {
   loc[dia]=n;
 
   /*Run LBFS */
-  LBFS(g,Y,X,&label1,&map1);
+  LBFS(g,Y,&X,&label1,&map1);
  
   /* Align to Grid */
   igraph_vector_null(&map1);
-  OrderGrid(g,loc,dia+1,X,&map1);
+  OrderGrid(g,loc,dia+1,&X,&map1);
 
   /* Run LBFS again from other-side */
   igraph_vector_clear(Y);
-  LBFS(g,X,Y,&label2,&map2);
+  LBFS(g,&X,Y,&label2,&map2);
 
   /* Map to grid again */
   igraph_vector_null(&map2);
   OrderGrid(g,loc,dia+1,Y,&map2);
 
-   int paths=0;
+   int paths=1;
+   exportToDot(g,loc,dia+1,gname,"maxPaths",NULL,0);
   /* Get the subgraphs for each level and recursively call the method if 
    * it has any edges */ 
    for(int i=0; i<dia+1; i++)
@@ -447,19 +455,26 @@ int minPaths(igraph_t* g, int depth) {
       igraph_t subg;
       igraph_vs_t vs;
       igraph_vs_seq(&vs,j,loc[i]-1);
+      printf("\n[%s]|%s L%d from %d to %d",gname,depthstring,i,j,loc[i]-1);
       igraph_induced_subgraph(g,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
-      paths= paths + minPaths(&subg, depth+1) - 1;
+      igraph_vs_destroy(&vs);
+      char ggname[100];
+      sprintf(ggname,"%s_subg%d",gname,i);
+      igraph_vector_t subY;
+      igraph_vector_init(&subY,0);
+      int subpaths=minPaths(&subg, ggname,depth+1,&subY);
+      printf("\n[%s]|%s L%d paths=%d",gname,depthstring,i,subpaths);
+      paths= paths + subpaths - 1;
+      igraph_vector_destroy(&subY);
+      igraph_destroy(&subg);
     }
 
-  igraph_vector_destroy(X);
-  igraph_vector_destroy(Y);
+  igraph_vector_destroy(&X);
+//  igraph_vector_destroy(Y);
   igraph_vector_destroy(&label1);
   igraph_vector_destroy(&label2);
   igraph_vector_destroy(&map1);
   igraph_vector_destroy(&map2);
-  igraph_destroy(&subg);
-
-
 
   /* Finally return the minimum number of paths possible */
      return paths;
