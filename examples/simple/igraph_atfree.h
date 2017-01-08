@@ -430,12 +430,17 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
   for(int i=0;i<dia;i++) loc[i]=(i+1)*s;
   loc[dia]=n;
 
+  char sname[200];
+  sprintf(sname,"%s_original",gname);
+  exportToDot(g,loc,dia+1,sname,"maxPaths",NULL,0);
   /*Run LBFS */
   LBFS(g,Y,&X,&label1,&map1);
  
   /* Align to Grid */
   igraph_vector_null(&map1);
   OrderGrid(g,loc,dia+1,&X,&map1);
+  sprintf(sname,"%s_lbfs1",gname);
+  exportToDot(g,loc,dia+1,sname,"lbfs1",&map1,0);
 
   /* Run LBFS again from other-side */
   igraph_vector_clear(Y);
@@ -444,20 +449,28 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
   /* Map to grid again */
   igraph_vector_null(&map2);
   OrderGrid(g,loc,dia+1,Y,&map2);
+  sprintf(sname,"%s_lbfs2",gname);
+  exportToDot(g,loc,dia+1,sname,"lbfs2",&map2,0);
 
    int paths=1;
-   exportToDot(g,loc,dia+1,gname,"maxPaths",NULL,0);
   /* Get the subgraphs for each level and recursively call the method if 
    * it has any edges */ 
    for(int i=0; i<dia+1; i++)
     {
       int j= (i==0)?0:loc[i-1];
+      igraph_vector_t tlevel;
+      igraph_vector_init(&tlevel,0);
+      for(int k=j;k<loc[i];k++)
+      	igraph_vector_insert(&tlevel,0,k);
       igraph_t subg;
       igraph_vs_t vs;
-      igraph_vs_seq(&vs,j,loc[i]-1);
+      igraph_vs_vector(&vs,&tlevel);
+//      igraph_vs_seq(&vs,j,loc[i]-1);
+      igraph_vector_print(&tlevel);
       printf("\n[%s]|%s L%d from %d to %d",gname,depthstring,i,j,loc[i]-1);
       igraph_induced_subgraph(g,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
       igraph_vs_destroy(&vs);
+      igraph_vector_destroy(&tlevel);
       char ggname[100];
       sprintf(ggname,"%s_subg%d",gname,i);
       igraph_vector_t subY;
