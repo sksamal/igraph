@@ -325,12 +325,28 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
    for(int l=0;l<locsize;l++) {
 	maxc[l] = loc[l]-start;  /* Maximum contribution or number of vertices in the elvel */
         minc[l] =0;
- 	int visited[maxc[l]];		
+/* 	int visited[maxc[l]];		
 	for(int i=0;i<maxc[l];i++)
-	   visited[i]=0;
+	   visited[i]=0; */
 
+      /* For each level, extract the subgraph and find minPaths */
+      igraph_t subg;
+      igraph_vs_t vs;
+      igraph_vs_seq(&vs,start,loc[l]-1);
+//      igraph_vector_print(&tlevel);
+//      printf("\n[%s]|%s L%d from %d to %d",gname,depthstring,i,j,loc[i]-1);
+      igraph_induced_subgraph(g,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
+      igraph_vs_destroy(&vs);
+      char ggname[100];
+      char gname[100]="testing";
+      sprintf(ggname,"%s_subg%d",gname,l);
+      igraph_vector_t subY;
+      igraph_vector_init(&subY,0);
+      minc[l] = minPaths(&subg, ggname,1,&subY);
+      igraph_destroy(&subg);
+      igraph_vector_destroy(&subY);
 	/* Computes the no of components in the level */
-	for(int i=0;i<maxc[l];i++) {
+/*	for(int i=0;i<maxc[l];i++) {
 	   if(visited[i]==0) visited[i]=++minc[l];	
 	   if(visited[i]<0) continue;
    	   igraph_vector_t snei;
@@ -342,9 +358,9 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 	  	if(visited[u-start]==0) visited[u-start]=abs(visited[i]);
 //		printf("\n\t\tu=%du-start=%d, visited[u-start]=%d",u,u-start,visited[u-start]);
 	   }
-	   visited[i]*=-1;   /*Over for this vertex */
-	   igraph_vector_destroy(&snei);
-	}
+	   visited[i]*=-1; */  /*Over for this vertex */
+/*	   igraph_vector_destroy(&snei);
+	} */
 
        /* Simple hamiltonian condition, 122..221 */
        if(l==0 || l==locsize-1) needc[l]=1;
@@ -357,9 +373,10 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
        printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
        start = loc[l];
        totextra+=extra[l];
+       isHamiltonian = isHamiltonian && (extra[l]>=0);
    }
 	/* If all needs are met, a simple HamCycle exists and return  else continue*/
-	if(!isHamiltonian || totextra<0) printf("\nJ0[Simple]:Graph is non-hamiltonian");
+	if( !isHamiltonian ) printf("\nJ0[Simple]:Graph is non-hamiltonian");
 	else { printf("\nJ0[Simple]:Graph is hamiltonian"); return 1; }
 
 	/* Search for complex hamcycle conditions, i.e when needs can be satisfied using
@@ -375,7 +392,7 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 			{ extra[l]++; contr[l+1]--; }
 //       		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
 	        totextra+=extra[l];
-		isHamiltonian = isHamiltonian && (totextra>=0);
+		isHamiltonian = isHamiltonian && (extra[l]>=0);
 	 }
 
 	for(int l=0;l<locsize;l++)
@@ -402,15 +419,15 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
   char depthstring[20] = "-\0";
 //  for(int i=0;i<depth;i++) sprintf(depthstring,"%s--",depthstring);
 
-  printf("\n[%s]|%s Number of vertices=%d",gname,depthstring,n);
-  printf(", Edges=%d",m);
+//  printf("\n[%s]|%s Number of vertices=%d",gname,depthstring,n);
+//  printf(", Edges=%d",m);
   igraph_integer_t dia;
   igraph_diameter(g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
-  printf(", Diameter=%d",dia);
+//  printf(", Diameter=%d",dia);
 
   /* No point in moving ahead if there are no vertices or no edges */
   if(n==0 || n==1 || m==0) { 
-  printf("\n[%s]|%s L%d paths=%d",gname,depthstring,0,n);
+//  printf("\n[%s]|%s L%d paths=%d",gname,depthstring,0,n);
   return n;
   }
 
@@ -431,16 +448,16 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
   loc[dia]=n;
 
   char sname[200];
-  sprintf(sname,"%s_original",gname);
-  exportToDot(g,loc,dia+1,sname,"maxPaths",NULL,0);
+ // sprintf(sname,"%s_original",gname);
+//  exportToDot(g,loc,dia+1,sname,"maxPaths",NULL,0);
   /*Run LBFS */
   LBFS(g,Y,&X,&label1,&map1);
  
   /* Align to Grid */
   igraph_vector_null(&map1);
   OrderGrid(g,loc,dia+1,&X,&map1);
-  sprintf(sname,"%s_lbfs1",gname);
-  exportToDot(g,loc,dia+1,sname,"lbfs1",&map1,0);
+//  sprintf(sname,"%s_lbfs1",gname);
+//  exportToDot(g,loc,dia+1,sname,"lbfs1",&map1,0);
 
   /* Run LBFS again from other-side */
   igraph_vector_clear(Y);
@@ -449,37 +466,80 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
   /* Map to grid again */
   igraph_vector_null(&map2);
   OrderGrid(g,loc,dia+1,Y,&map2);
-  sprintf(sname,"%s_lbfs2",gname);
-  exportToDot(g,loc,dia+1,sname,"lbfs2",&map2,0);
+//  sprintf(sname,"%s_lbfs2",gname);
+//  exportToDot(g,loc,dia+1,sname,"lbfs2",&map2,0);
+
+  // Map the graph to gmap on which we will work
+  igraph_vector_t invmap2;
+  igraph_t gmap; 
+  igraph_vector_init(&invmap2,n);
+  igraph_empty(&gmap, n, IGRAPH_UNDIRECTED);
+  for(int ii=0;ii<n;ii++) {
+    igraph_integer_t i = (int)VECTOR(map2)[ii];
+    VECTOR(invmap2)[i] = ii;
+   }
+  for(int i=0;i<m;i++) {
+     igraph_integer_t from, to;
+     igraph_edge(g,i,&from,&to);
+     from=(int)VECTOR(invmap2)[from];
+     to=(int)VECTOR(invmap2)[to]; 
+     igraph_add_edge(&gmap,from,to);
+    }
 
    int paths=1;
+   int contr[dia+1], extra[dia+1], maxc[dia+1], minc[dia+1];
+   igraph_bool_t recalc = 0;
   /* Get the subgraphs for each level and recursively call the method if 
    * it has any edges */ 
    for(int i=0; i<dia+1; i++)
     {
       int j= (i==0)?0:loc[i-1];
-      igraph_vector_t tlevel;
-      igraph_vector_init(&tlevel,0);
-      for(int k=j;k<loc[i];k++)
-      	igraph_vector_insert(&tlevel,0,k);
+	maxc[i] = loc[i]- j;  /* Maximum contribution or number of vertices in the elvel */
+
+//      igraph_vector_t tlevel;
+//      igraph_vector_init(&tlevel,0);
+//      for(int k=j;k<loc[i];k++)
+//      	igraph_vector_insert(&tlevel,0,k);
       igraph_t subg;
       igraph_vs_t vs;
-      igraph_vs_vector(&vs,&tlevel);
-//      igraph_vs_seq(&vs,j,loc[i]-1);
-      igraph_vector_print(&tlevel);
-      printf("\n[%s]|%s L%d from %d to %d",gname,depthstring,i,j,loc[i]-1);
-      igraph_induced_subgraph(g,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
+      igraph_vs_seq(&vs,j,loc[i]-1);
+//      printf("\n[%s]|%s L%d from %d to %d",gname,depthstring,i,j,loc[i]-1);
+      igraph_induced_subgraph(&gmap,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
       igraph_vs_destroy(&vs);
-      igraph_vector_destroy(&tlevel);
       char ggname[100];
       sprintf(ggname,"%s_subg%d",gname,i);
       igraph_vector_t subY;
       igraph_vector_init(&subY,0);
-      int subpaths=minPaths(&subg, ggname,depth+1,&subY);
-      printf("\n[%s]|%s L%d paths=%d",gname,depthstring,i,subpaths);
+      int subpaths = minc[i] = minPaths(&subg, ggname,depth+1,&subY);
+ //     printf("\n[%s]|%s L%d paths=%d",gname,depthstring,i,subpaths);
       paths= paths + subpaths - 1;
       igraph_vector_destroy(&subY);
       igraph_destroy(&subg);
+
+      extra[i]=(1-minc[i]);
+      contr[i]=(maxc[i]-1);
+      if(extra[i]<0) recalc = 1; 
+  //    printf("\n[%s]|%s Level [minc,maxc] needc extra contr",gname,depthstring);
+  //    printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i]);
+    }
+
+   if(recalc) 
+    {
+	paths=1;
+   	for(int l=0;l<dia+1;l++) {
+		if(l!=0)  
+		   while(extra[l]<0 && contr[l-1]>0)
+			{ extra[l]++; contr[l-1]--; }
+		if(l!=dia)
+		   while(extra[l]<0 && contr[l+1]>0)
+			{ extra[l]++; contr[l+1]--; }
+//       		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
+	        paths= paths - extra[l];
+	 }
+	
+  //    printf("\n[%s]|%s Level [minc,maxc] needc extra contr",gname,depthstring);
+  //    for(int i=0;i<dia+1;i++)
+  //    	printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i]);
     }
 
   igraph_vector_destroy(&X);
@@ -488,6 +548,7 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
   igraph_vector_destroy(&label2);
   igraph_vector_destroy(&map1);
   igraph_vector_destroy(&map2);
+  igraph_destroy(&gmap);
 
   /* Finally return the minimum number of paths possible */
      return paths;
