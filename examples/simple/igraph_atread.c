@@ -6,6 +6,7 @@
 
 #include <igraph.h>
 #include "igraph_atfree.h"
+#include <time.h>
 
 int main(int argc, char** argv) {
   
@@ -106,8 +107,14 @@ int main(int argc, char** argv) {
   path1[0]='\0';
   path2[0]='\0';
   iso1=-1, iso2=-1;
+  clock_t start,end1,end2;
+  start = clock();
   isHamUsingLAD(&gmap1,&iso1, path1);
-  isHamUsingVF2(&gmap1,&iso2, path2);
+  end1 = clock();
+  printf("\nLAD took %lf secs",(end1-start)/1000000.0);
+//  isHamUsingVF2(&gmap1,&iso2, path2);
+  end2 = clock();
+  printf("\nVF2 took %lf secs",(end2-end1)/1000000.0);
   sprintf(sspos,"Graph=%s, AT-Free=%d,OurAlgo=%d\nDesc:%sLAD=%d [%s],\nVF2=%d [%s] ",sname,isatfree1,oiso,desc,iso1, path1,iso2, path2);
   exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 

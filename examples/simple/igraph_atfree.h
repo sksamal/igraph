@@ -6,6 +6,7 @@
 
 #include <igraph.h>
 #include <string.h>
+#include "igraph_paths.h"
 #define MLEVELS 7
 #define LSIZE 7 
 
@@ -25,6 +26,7 @@ void forwardNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vecto
 void currentNonNeighbors(igraph_t* g, int j, int *loc, int locsize, igraph_vector_t *cnn);
 void getNeighbors(igraph_t* g,int j, int *loc,igraph_vector_t *ne, int dir);
 igraph_bool_t isHamiltonian(igraph_t* g, int *loc, int l);
+void isHamUsingOurAlgo(igraph_t *g, igraph_bool_t *iso, char *path);
 void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path);
 void isHamUsingVF2(igraph_t *g, igraph_bool_t *iso,char *path);
 int read_graph_edgelist(igraph_t *graph, char *description, FILE *instream, igraph_integer_t n, igraph_bool_t directed); 
@@ -267,6 +269,114 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
   return isatfree;		
 }
 
+void isHamUsingOurAlgo(igraph_t *g, igraph_bool_t *iso, char *path) 
+{
+  igraph_integer_t dia;
+  igraph_diameter(g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
+  int loc[dia+1];
+  igraph_vector_t X,Y,map2;
+  igraph_t gmap1;
+  igraph_vector_init(&X,0);
+  igraph_vector_init(&Y,0);
+  igraph_bool_t isatfree = processForAT(g,"hamcheck",0,loc,&X,&Y,&map2,&gmap1);
+
+  int start = 0, totextra=0;;
+  int contr[dia+1], needc[dia+1], extra[dia+1], maxc[dia+1], minc[dia+1];
+  int isHamiltonian = 1;
+  printf("\nLevel [minc,maxc] needc extra contr");
+
+   /* Calculate max-compoments (maxc), min-compoments(minc), extra/deficit (extra) of number
+    * of vertices and amount it can contribute to the adjacent levels(contr) 
+    * J0: In this loop, we check if condition is satisfied, without having to contribute
+    * to its neighbors (simple hamiltonian)*/ 
+   for(int l=0;l<dia+1;l++) {
+	maxc[l] = loc[l]-start;  /* Maximum contribution or number of vertices in the elvel */
+        minc[l] =0;
+/* 	int visited[maxc[l]];		
+	for(int i=0;i<maxc[l];i++)
+	   visited[i]=0; */
+
+      /* For each level, extract the subgraph and find minPaths */
+      igraph_t subg;
+      igraph_vs_t vs;
+      igraph_vs_seq(&vs,start,loc[l]-1);
+//      igraph_vector_print(&tlevel);
+//      printf("\n[%s]|%s L%d from %d to %d",gname,depthstring,i,j,loc[i]-1);
+      igraph_induced_subgraph(g,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
+      igraph_vs_destroy(&vs);
+      char ggname[100];
+      char gname[100]="testing";
+      sprintf(ggname,"%s_subg%d",gname,l);
+      igraph_vector_t subY;
+      igraph_vector_init(&subY,0);
+      minc[l] = minPaths(&subg, ggname,1,&subY);
+      igraph_destroy(&subg);
+      igraph_vector_destroy(&subY);
+	/* Computes the no of components in the level */
+/*	for(int i=0;i<maxc[l];i++) {
+	   if(visited[i]==0) visited[i]=++minc[l];	
+	   if(visited[i]<0) continue;
+   	   igraph_vector_t snei;
+    	   igraph_vector_init(&snei,1);
+	   getNeighbors(g,start+i,loc,&snei,0); 
+  //     	   printf("\n\t start=%d, start+i=%d,visited[i]=%d size(snei)=%d cc=%d",start,start+i,visited[i],igraph_vector_size(&snei)-1,minc[l]);
+	   for (int k=0; k<igraph_vector_size(&snei)-1; k++) {
+	  	int u = (int) VECTOR(snei)[k];
+	  	if(visited[u-start]==0) visited[u-start]=abs(visited[i]);
+//		printf("\n\t\tu=%du-start=%d, visited[u-start]=%d",u,u-start,visited[u-start]);
+	   }
+	   visited[i]*=-1; */  /*Over for this vertex */
+/*	   igraph_vector_destroy(&snei);
+	} */
+
+       /* Simple hamiltonian condition, 122..221 */
+       if(l==0 || l== dia) needc[l]=1;
+       else needc[l]=2;
+
+       if(needc[l]>maxc[l]) isHamiltonian = 0;  /*Flag if need is more than max it can contribute */
+       extra[l]=(needc[l]-minc[l]);
+       contr[l]=(maxc[l]-needc[l]);
+       //printf("\nLevel [minc,maxc] needc extra contr");
+       printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
+       start = loc[l];
+       totextra+=extra[l];
+       isHamiltonian = isHamiltonian && (extra[l]>=0);
+   }
+	/* If all needs are met, a simple HamCycle exists and return  else continue*/
+	if( !isHamiltonian ) printf("\nJ0[Simple]:Graph is non-hamiltonian");
+	else { printf("\nJ0[Simple]:Graph is hamiltonian"); *iso = 1; }
+
+	/* Search for complex hamcycle conditions, i.e when needs can be satisfied using
+           its neighbors */ 
+	totextra=0; isHamiltonian=1;
+   	printf("\n\nLevel [minc,maxc] needc extra contr");
+   	for(int l=0;l<dia+1;l++) {
+		if(l!=0)  
+		   while(extra[l]<0 && contr[l-1]>0)
+			{ extra[l]++; contr[l-1]--; }
+		if(l!=dia)
+		   while(extra[l]<0 && contr[l+1]>0)
+			{ extra[l]++; contr[l+1]--; }
+//       		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
+	        totextra+=extra[l];
+		isHamiltonian = isHamiltonian && (extra[l]>=0);
+	 }
+
+	for(int l=0;l<dia;l++)
+       		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
+	
+	/* If a complex hamcycle exists, return true */	
+	if(!isHamiltonian) 
+	  { *iso = 0; printf("\nJ1[Complex]:Graph is non-hamiltonian"); }
+	else 
+	  { *iso = 1; printf("\nJ1[Complex]:Graph is hamiltonian"); }
+  
+	printf("\nNumber of vertices(l0 to l%d):",dia);	
+	for(int l=0;l<dia;l++) 		   
+	 printf("%d ",extra[l]); 
+
+}
+
 /* Uses igraph LAD algorithm to return a hampath 
  * if it exists  timesout after 180 seconds*/
 void isHamUsingLAD(igraph_t *g, igraph_bool_t *iso, char *path) {
@@ -407,6 +517,164 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 	 printf("%d ",extra[l]); 
 	return isHamiltonian;
 
+}
+
+int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, igraph_vector_ptr_t *paths) {
+   
+  igraph_vector_t map1, map2, X, label1, label2;
+  int n = igraph_vcount(g);
+  int m = igraph_ecount(g);
+
+  char depthstring[20] = "-\0";
+  
+  if(m==0) {
+   for(int i=0;i<n;i++) {
+     igraph_vector_t path;
+     igraph_vector_init(&path,1);
+     VECTOR(path)[0] = i;
+     igraph_vector_ptr_push_back(paths,&path); 
+   }
+     return n;
+  }
+
+  igraph_integer_t dia;
+  igraph_diameter(g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
+
+  /* Randomly assign values in loc, just for printing */
+  int loc[dia+1];
+  int s = n/(dia+1);
+  for(int i=0;i<dia;i++) loc[i]=(i+1)*s;
+  loc[dia]=n;
+
+  char sname[200];
+ // sprintf(sname,"%s_original",gname);
+//  exportToDot(g,loc,dia+1,sname,"maxPaths",NULL,0);
+  /*Run LBFS */
+  LBFS(g,Y,&X,&label1,&map1);
+ 
+  /* Align to Grid */
+  igraph_vector_null(&map1);
+  OrderGrid(g,loc,dia+1,&X,&map1);
+//  sprintf(sname,"%s_lbfs1",gname);
+//  exportToDot(g,loc,dia+1,sname,"lbfs1",&map1,0);
+
+  /* Run LBFS again from other-side */
+  igraph_vector_clear(Y);
+  LBFS(g,&X,Y,&label2,&map2);
+
+  /* Map to grid again */
+  igraph_vector_null(&map2);
+  OrderGrid(g,loc,dia+1,Y,&map2);
+//  sprintf(sname,"%s_lbfs2",gname);
+//  exportToDot(g,loc,dia+1,sname,"lbfs2",&map2,0);
+
+  // Map the graph to gmap on which we will work
+  igraph_vector_t invmap2;
+  igraph_t gmap; 
+  igraph_vector_init(&invmap2,n);
+  igraph_empty(&gmap, n, IGRAPH_UNDIRECTED);
+  for(int ii=0;ii<n;ii++) {
+    igraph_integer_t i = (int)VECTOR(map2)[ii];
+    VECTOR(invmap2)[i] = ii;
+   }
+  for(int i=0;i<m;i++) {
+     igraph_integer_t from, to;
+     igraph_edge(g,i,&from,&to);
+     from=(int)VECTOR(invmap2)[from];
+     to=(int)VECTOR(invmap2)[to]; 
+     igraph_add_edge(&gmap,from,to);
+    }
+
+   int npaths=1;
+   int contr[dia+1], extra[dia+1], maxc[dia+1], minc[dia+1];
+   int need=1;
+   igraph_bool_t recalc = 0;
+   igraph_vector_ptr_t lpaths[dia+1];
+   igraph_vector_ptr_t subpaths;
+   igraph_vector_ptr_init(&subpaths,0);
+  /* Get the subgraphs for each level and recursively call the method if 
+   * it has any edges */ 
+   for(int i=0; i<dia+1; i++)
+    {
+      int j= (i==0)?0:loc[i-1];
+	maxc[i] = loc[i]- j;  /* Maximum contribution or number of vertices in the elvel */
+
+      igraph_t subg;
+      igraph_vs_t vs;
+      igraph_vs_seq(&vs,j,loc[i]-1);
+//      printf("\n[%s]|%s L%d from %d to %d",gname,depthstring,i,j,loc[i]-1);
+      igraph_induced_subgraph(&gmap,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
+      igraph_vs_destroy(&vs);
+      char ggname[100];
+      sprintf(ggname,"%s_subg%d",gname,i);
+      igraph_vector_t subY;
+      igraph_vector_init(&subY,0);
+      igraph_vector_ptr_init(&lpaths[i],0);
+      int spaths = minc[i] = pathCover(&subg, ggname,depth+1,&subY, &lpaths[i]);
+ //     printf("\n[%s]|%s L%d paths=%d",gname,depthstring,i,subpaths);
+      npaths= npaths + spaths - 1;
+
+      igraph_vector_destroy(&subY);
+      igraph_destroy(&subg);
+
+      extra[i]=(need-minc[i]);
+      contr[i]=(maxc[i]-need);
+      if(extra[i]<0) recalc = 1; 
+  //    printf("\n[%s]|%s Level [minc,maxc] needc extra contr",gname,depthstring);
+  //    printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i]);
+  }
+
+   int help[2][dia+1];
+   for(int i=0;i<dia+1;i++)
+    { help[0][i] = help[1][i] = 0; }
+
+   if(recalc) 
+    {
+	npaths=1;
+   	for(int l=0;l<dia+1;l++) {
+		if(l!=0)  
+		   while(extra[l]<0 && contr[l-1]>0)
+			{ extra[l]++; contr[l-1]--; help[1][l-1]++; }
+		if(l!=dia)
+		   while(extra[l]<0 && contr[l+1]>0)
+			{ extra[l]++; contr[l+1]--; help[0][l+1]++; }
+//       		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
+	        npaths= npaths - extra[l];
+	 }
+
+	    
+    /* Merge subpaths based on help */	
+   	igraph_vector_ptr_t subpaths;
+   	igraph_vector_ptr_init(&subpaths,0);
+   	for(int l=0;l<dia+1;l++) {
+//		if(help[0][l] > 0) {
+//		   breakpaths(lpaths[i],help[0][l]);
+//		   int pickedgesnum=need+2*help[0][l];
+//		   pickedges(ledges, li-1,li,pickedgesnum);
+//		  }
+//		if(help[1][l] > 0) {
+//		   breakpaths(lpaths[i],help[1][l]);
+//		   int pickedgenum=need+2*help[1][l];
+//		   pickedges(redges, li,li+1,pickedgesnum);
+//		  }
+//		mergepaths(&subpaths,ledges,redges);
+ 	}			
+	    
+  //    printf("\n[%s]|%s Level [minc,maxc] needc extra contr",gname,depthstring);
+  //    for(int i=0;i<dia+1;i++)
+  //    	printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i]);
+    }
+
+  igraph_vector_destroy(&X);
+//  igraph_vector_destroy(Y);
+  igraph_vector_destroy(&label1);
+  igraph_vector_destroy(&label2);
+  igraph_vector_destroy(&map1);
+  igraph_vector_destroy(&map2);
+  igraph_destroy(&gmap);
+
+  /* Finally return the minimum number of paths possible */
+     return npaths;
 }
 
 /* Experimental approach */

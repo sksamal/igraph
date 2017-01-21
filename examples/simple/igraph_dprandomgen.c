@@ -8,7 +8,7 @@
 #include "igraph_atfree.h"
 #define MINV 6 
 #define MIND 0 
-#define MAXV 70
+#define MAXV 30
 #define MAXD 20
 #define MINDIA 6 
 

@@ -34,7 +34,10 @@ int main(int argc, char** argv) {
      printf("\nFile %s not found",argv[1]); 
      exit(0);
    }
-  igraph_read_graph_edgelist(&g,fp,0,0);
+//  igraph_read_graph_edgelist(&g,fp,0,0);
+  char desc[100];
+  read_graph_edgelist(&g,desc,fp,0,0);
+  printf("\nDesc:%s",desc);
 
 /* 
  int n = igraph_vcount(&g);
@@ -95,7 +98,7 @@ int main(int argc, char** argv) {
   oiso=isHamiltonian(&gmap1,loc,dia+1);
 //  if(oiso) 
     sprintf(sname,"hdp-%s_%d",argv[1],iter);  
-  sprintf(sspos,"Graph=%s, DP=%d,OurAlgo=%d",sname,isdp1,oiso);
+  sprintf(sspos,"Graph=%s, DP=%d,OurAlgo=%d\nDesc:%s",sname,isdp1,oiso,desc);
   exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 
   /* Run the LAD and VFS isomorphism algorithms 
@@ -104,9 +107,14 @@ int main(int argc, char** argv) {
   path1[0]='\0';
   path2[0]='\0';
   iso1=-1, iso2=-1;
+  clock_t start,end1,end2;
+  start = clock();
   isHamUsingLAD(&gmap1,&iso1, path1);
-  isHamUsingVF2(&gmap1,&iso2, path2);
-  sprintf(sspos,"Graph=%s, DP=%d,OurAlgo=%d,\nLAD=%d [%s],\nVF2=%d [%s] ",sname,isdp1,oiso,iso1, path1,iso2, path2);
+  end1 = clock();
+  printf("\nLAD took %lf secs",(end1-start)/1000000.0);
+//  isHamUsingVF2(&gmap1,&iso2, path2);
+  end2 = clock();
+  sprintf(sspos,"Graph=%s, DP=%d,OurAlgo=%d\nDesc:%sLAD=%d [%s],\nVF2=%d [%s] ",sname,isdp1,oiso,desc,iso1, path1,iso2, path2);
   exportToDot(&gmap1,loc,dia+1,sname,sspos,&map2,1);
 
   igraph_vs_t vs;
@@ -124,6 +132,12 @@ int main(int argc, char** argv) {
   fp = fopen(sspos,"w");
   igraph_write_graph_edgelist(&g, fp);
   fclose(fp);
+
+  sprintf(sspos,"%s_%d.dot.edg",argv[1],iter);  
+  fp = fopen(sspos,"w");
+  igraph_write_graph_edgelist(&g, fp);
+  fclose(fp);
+
   igraph_vector_destroy(&map2);
   igraph_vector_destroy(&X);
   igraph_destroy(&gmap1);
