@@ -121,6 +121,12 @@ int main(int argc, char** argv) {
   igraph_vs_t vs;
   igraph_vs_vector(&vs, &X);
   printf("\nMinPaths=%d\n",minPaths(&g,argv[1],0,&Y));
+  Paths pc;
+  igraph_paths_init(&pc,0);
+  pathCover(&g,argv[1],0,&Y,&pc);
+  char pstr[500];
+  igraph_paths_str(&pc,pstr);
+  printf("\nPathCover=%s\n",pstr);
   printf("\nIter%d :Deleting vertices.. ",iter);igraph_vector_print(&X);
   igraph_delete_vertices(&g,vs);
   igraph_vector_t Ytemp;

@@ -92,8 +92,40 @@ int main() {
   printf("\nPS1S= %s",pathstr);
   printf(" Size= %d",igraph_paths_size(&ps1));
 
+  igraph_paths_init(&ps2,0);
+  int vs8[] = {91,2,12};
+  int vs9[] = {13,4,11};
+  int vs10[] = {14,1,11,18};
+  Path p6, p7, p8;
+  igraph_path_init(&p6,0);
+  igraph_path_init(&p7,0);
+  igraph_path_init(&p8,0);
+  igraph_path_add(&p6,vs8,3);
+  igraph_path_add(&p7,vs9,3);
+  igraph_path_add(&p8,vs10,4);
+  igraph_paths_add(&ps2,&p6);
+  igraph_paths_add(&ps2,&p7);
+  igraph_paths_add(&ps2,&p8);
+  igraph_paths_str(&ps2,pathstr);
+  printf("\nPS2= %s",pathstr);
+  printf(" Size= %d",igraph_paths_size(&ps2));
+  igraph_paths_merge(&ps1,&ps2);  
+  igraph_paths_str(&ps1,pathstr);
+  printf("\nPS1 (after merge)= %s",pathstr);
+  printf(" Size= %d",igraph_paths_size(&ps1));
+  igraph_paths_clear(&ps2);
+  igraph_paths_str(&ps2,pathstr);
+  printf("\nPS2 (after merge)= %s",pathstr);
+  printf(" Size= %d",igraph_paths_size(&ps2));
+
   igraph_path_destroy(&p2);
   igraph_path_destroy(&p1);
+  igraph_path_destroy(&p3);
+  igraph_path_destroy(&p4);
+  igraph_path_destroy(&p5);
+  igraph_path_destroy(&p6);
+  igraph_path_destroy(&p7);
+  igraph_path_destroy(&p8);
 //  igraph_paths_destroy(&ps1);
   return 1;
 

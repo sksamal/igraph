@@ -519,7 +519,7 @@ igraph_bool_t isHamiltonian(igraph_t *g,int *loc,int locsize) {
 
 }
 
-int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, igraph_vector_ptr_t *paths) {
+int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, Paths *paths) {
    
   igraph_vector_t map1, map2, X, label1, label2;
   int n = igraph_vcount(g);
@@ -529,10 +529,10 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, igraph_ve
   
   if(m==0) {
    for(int i=0;i<n;i++) {
-     igraph_vector_t path;
-     igraph_vector_init(&path,1);
+     Path path;
+     igraph_path_init(&path,1);
      VECTOR(path)[0] = i;
-     igraph_vector_ptr_push_back(paths,&path); 
+     igraph_paths_add(paths,&path); 
    }
      return n;
   }
@@ -589,9 +589,7 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, igraph_ve
    int contr[dia+1], extra[dia+1], maxc[dia+1], minc[dia+1];
    int need=1;
    igraph_bool_t recalc = 0;
-   igraph_vector_ptr_t lpaths[dia+1];
-   igraph_vector_ptr_t subpaths;
-   igraph_vector_ptr_init(&subpaths,0);
+   Paths lpaths[dia+1];
   /* Get the subgraphs for each level and recursively call the method if 
    * it has any edges */ 
    for(int i=0; i<dia+1; i++)
@@ -602,15 +600,23 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, igraph_ve
       igraph_t subg;
       igraph_vs_t vs;
       igraph_vs_seq(&vs,j,loc[i]-1);
+      igraph_vector_t map,invmap;
+      igraph_vector_init(&map,0);
+      igraph_vector_init(&invmap,0);
 //      printf("\n[%s]|%s L%d from %d to %d",gname,depthstring,i,j,loc[i]-1);
-      igraph_induced_subgraph(&gmap,&subg,vs,IGRAPH_SUBGRAPH_AUTO);
+      igraph_induced_subgraph_map(&gmap,&subg,vs,IGRAPH_SUBGRAPH_AUTO,&map,&invmap);
       igraph_vs_destroy(&vs);
       char ggname[100];
       sprintf(ggname,"%s_subg%d",gname,i);
       igraph_vector_t subY;
       igraph_vector_init(&subY,0);
-      igraph_vector_ptr_init(&lpaths[i],0);
+      igraph_paths_init(&lpaths[i],0);
       int spaths = minc[i] = pathCover(&subg, ggname,depth+1,&subY, &lpaths[i]);
+      for(int k=0;k<igraph_paths_size(&lpaths[i]);k++) {
+	 Path *p = VECTOR(lpaths[i])[k];
+	 for( int m=0;m<igraph_path_size(p);m++) 
+		VECTOR(*p)[m]=	(int)VECTOR(invmap)[(int)VECTOR(*p)[m]];
+      }	
  //     printf("\n[%s]|%s L%d paths=%d",gname,depthstring,i,subpaths);
       npaths= npaths + spaths - 1;
 
@@ -624,6 +630,7 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, igraph_ve
   //    printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i]);
   }
 
+   recalc=1;
    int help[2][dia+1];
    for(int i=0;i<dia+1;i++)
     { help[0][i] = help[1][i] = 0; }
@@ -644,20 +651,33 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, igraph_ve
 
 	    
     /* Merge subpaths based on help */	
-   	igraph_vector_ptr_t subpaths;
-   	igraph_vector_ptr_init(&subpaths,0);
-   	for(int l=0;l<dia+1;l++) {
-//		if(help[0][l] > 0) {
-//		   breakpaths(lpaths[i],help[0][l]);
-//		   int pickedgesnum=need+2*help[0][l];
-//		   pickedges(ledges, li-1,li,pickedgesnum);
-//		  }
-//		if(help[1][l] > 0) {
-//		   breakpaths(lpaths[i],help[1][l]);
-//		   int pickedgenum=need+2*help[1][l];
-//		   pickedges(redges, li,li+1,pickedgesnum);
-//		  }
-//		mergepaths(&subpaths,ledges,redges);
+   	igraph_paths_init(paths,0);
+   	for(int l=0;l<dia+1;l++) 
+	    igraph_paths_break(&lpaths[l],help[0][l]+help[1][l]);
+	igraph_paths_merge(paths,&lpaths[0]);
+   	for(int l=0;l<dia;l++) {
+	    Paths edges;
+	    igraph_paths_init(&edges,0);
+	    for(int j=0; j<igraph_paths_size(&lpaths[l]); j++) {
+		Path *p = VECTOR(lpaths[l])[j];
+		int v = (int)VECTOR(*p)[igraph_vector_size(p)-1];
+		igraph_vector_t snei;
+		igraph_vector_init(&snei,0);
+	   	getNeighbors(&gmap,v,loc,&snei,1);
+		for(int i=0;i<igraph_vector_size(&snei);i++)
+		{
+		  Path *p = (Path*) malloc(sizeof(Path*)); 
+		  igraph_path_init(p,0);
+		  igraph_path_addv(p,j);
+		  igraph_path_addv(p,(int)VECTOR(snei)[i]);
+		  igraph_paths_add(&edges,p);
+  		}
+	      }
+	    igraph_paths_merge(paths,&edges);
+	    igraph_paths_simplify(paths);
+	    igraph_paths_merge(paths,&lpaths[l+1]);
+	    igraph_paths_simplify(paths);
+  	    igraph_paths_destroy(&edges);
  	}			
 	    
   //    printf("\n[%s]|%s Level [minc,maxc] needc extra contr",gname,depthstring);
@@ -665,6 +685,8 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, igraph_ve
   //    	printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i]);
     }
 
+  for(int i=0;i<dia+1;i++)
+	igraph_paths_destroy(&lpaths[i]);
   igraph_vector_destroy(&X);
 //  igraph_vector_destroy(Y);
   igraph_vector_destroy(&label1);

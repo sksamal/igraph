@@ -14,6 +14,8 @@ void igraph_paths_sort(Paths *ps);
 int igraph_paths_break(Paths *ps, int more);
 void igraph_paths_merge(Paths *ps, Paths *ps1);
 void igraph_paths_str(Paths *ps, char *pathsstr);
+void igraph_paths_clear(Paths *ps);
+void igraph_paths_remove(Paths *ps, int index);
 
 void igraph_path_init(Path *p, int size);
 void igraph_path_destroy(Path *p);
@@ -37,6 +39,11 @@ void igraph_paths_destroy(Paths *ps)
 void igraph_paths_add(Paths *ps, Path *p)
 {
   igraph_vector_ptr_push_back(ps,p);
+}
+
+void igraph_paths_remove(Paths *ps, int index)
+{
+  igraph_vector_ptr_remove(ps,index);
 }
 
 int igraph_paths_size(Paths *ps)
@@ -103,11 +110,12 @@ void igraph_paths_merge(Paths *ps, Paths *ps1) {
   for(int i=0; i<igraph_vector_ptr_size(ps1); i++) {
 	Path *vi = VECTOR(*ps1)[i]; 
 	int lvalue = (int) VECTOR(*vi)[0];
+	int rvalue = (int) VECTOR(*vi)[igraph_vector_size(vi)-1];
 	int j=0;
   	for(; j<igraph_vector_ptr_size(ps); j++) {
 	    Path *vj = VECTOR(*ps)[j];   /* Find if the first vertex in ps1 matches with last vertex in ps */
 	    int rpos = igraph_vector_size(vj) -1;
-	    if(lvalue == (int)VECTOR(*vj)[rpos]) {
+	    if(lvalue == (int)VECTOR(*vj)[rpos] || rvalue == (int)VECTOR(*vj)[rpos]) {
 		igraph_path_merge(vj,vi);
 	 	break;
 	    }	
@@ -117,6 +125,27 @@ void igraph_paths_merge(Paths *ps, Paths *ps1) {
     }
    igraph_paths_sort(ps);
 }
+
+void igraph_paths_simplify(Paths *ps) {
+
+   for(int i=0; i<igraph_paths_size(ps);i++)
+    {
+       Path *pi = VECTOR(*ps)[i];  
+       for(int j=i+1; j<igraph_paths_size(ps);j++)
+        {
+          Path *pj = VECTOR(*ps)[j]; 
+	  if(igraph_path_merge(pi,pj))
+		igraph_path_clear(pj);
+	}
+    }
+   igraph_paths_sort(ps);
+   for(int i=0; i<igraph_paths_size(ps);i++)
+    {
+       Path *pi = VECTOR(*ps)[i]; 
+       if(igraph_vector_size(pi)==0)
+	 { igraph_paths_remove(ps,i); i--; }
+    }
+ }
 
 void igraph_paths_str(Paths *ps, char *pathsstr) {
    *pathsstr='\0';
@@ -129,6 +158,12 @@ void igraph_paths_str(Paths *ps, char *pathsstr) {
        else
           sprintf(pathsstr,"%s%s,",pathsstr,pathstr);
     }
+}
+
+void igraph_paths_clear(Paths *ps) {
+
+  igraph_vector_ptr_clear(ps);
+
 }
 
 void igraph_path_init(Path *p, int size) {
@@ -157,15 +192,25 @@ void igraph_path_destroy(Path *p) {
 
 int igraph_path_merge(Path *p, Path *p1) {
 
+ /* Only appends p1 to p , in either direction */
  /* Check if last vertex of p is same as first vertex of p1 */ 
  int lvalue = (int)VECTOR(*p)[igraph_vector_size(p)-1];
- if(lvalue != (int)VECTOR(*p1)[0]) return -1;
- 
- igraph_vector_remove(p1,0);
- igraph_vector_append(p,p1);
+ if(lvalue == (int)VECTOR(*p1)[0]) { 
+ 	igraph_vector_remove(p1,0);
+ 	igraph_vector_append(p,p1);
+	return 1;
+ }
+
+ /* Check if last vertex of p is same as last vertex of p1 */ 
+ if(lvalue == (int)VECTOR(*p1)[igraph_vector_size(p1)-1]) { 
+	igraph_vector_reverse(p1);
+	igraph_vector_remove(p1,0);
+	igraph_vector_append(p,p1);
+	return 1;
+  }
 // igraph_vector_destroy(p1);
  
- return 1;
+ return -1;
 }
  
 int igraph_path_size(Path *p) {
