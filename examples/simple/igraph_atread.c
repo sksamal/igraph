@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
   isHamUsingLAD(&gmap1,&iso1, path1);
   end1 = clock();
   printf("\nLAD took %lf secs",(end1-start)/1000000.0);
-//  isHamUsingVF2(&gmap1,&iso2, path2);
+  isHamUsingVF2(&gmap1,&iso2, path2);
   end2 = clock();
   printf("\nVF2 took %lf secs",(end2-end1)/1000000.0);
   sprintf(sspos,"Graph=%s, AT-Free=%d,OurAlgo=%d\nDesc:%sLAD=%d [%s],\nVF2=%d [%s] ",sname,isatfree1,oiso,desc,iso1, path1,iso2, path2);
@@ -121,12 +121,12 @@ int main(int argc, char** argv) {
   igraph_vs_t vs;
   igraph_vs_vector(&vs, &X);
   printf("\nMinPaths=%d\n",minPaths(&g,argv[1],0,&Y));
-  Paths pc;
-  igraph_paths_init(&pc,0);
-  pathCover(&g,argv[1],0,&Y,&pc);
-  char pstr[500];
-  igraph_paths_str(&pc,pstr);
-  printf("\nPathCover=%s\n",pstr);
+//  Paths pc;
+//  igraph_paths_init(&pc,0);
+//  pathCover(&g,argv[1],0,&Y,&pc);
+//  char pstr[500];
+//  igraph_paths_str(&pc,pstr);
+//  printf("\nPathCover=%s\n",pstr);
   printf("\nIter%d :Deleting vertices.. ",iter);igraph_vector_print(&X);
   igraph_delete_vertices(&g,vs);
   igraph_vector_t Ytemp;

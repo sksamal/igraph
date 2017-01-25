@@ -14,6 +14,7 @@ void igraph_paths_sort(Paths *ps);
 int igraph_paths_break(Paths *ps, int more);
 void igraph_paths_merge(Paths *ps, Paths *ps1);
 void igraph_paths_str(Paths *ps, char *pathsstr);
+void igraph_paths_print(Paths *ps);
 void igraph_paths_clear(Paths *ps);
 void igraph_paths_remove(Paths *ps, int index);
 
@@ -24,6 +25,7 @@ void igraph_path_addv(Path *p, int v);
 int igraph_path_size(Path *p);
 int igraph_path_merge(Path *p, Path *p1);
 void igraph_path_str(Path *p, char *pathstr);
+void igraph_path_print(Path *p);
 void igraph_path_clear(Path *p);
 
 void igraph_paths_init(Paths *ps, int size)
@@ -160,6 +162,12 @@ void igraph_paths_str(Paths *ps, char *pathsstr) {
     }
 }
 
+void igraph_paths_print(Paths *ps) {
+    char pathsstr[400];
+    igraph_paths_str(ps,pathsstr);
+    printf("%s\n",pathsstr);
+ }
+
 void igraph_paths_clear(Paths *ps) {
 
   igraph_vector_ptr_clear(ps);
@@ -229,6 +237,12 @@ void igraph_path_str(Path *p, char *pathstr) {
       sprintf(pathstr,"%s-%d",pathstr,(int)VECTOR(*p)[i]);
    }
 }
+
+void igraph_path_print(Path *p) {
+    char pathstr[200];
+    igraph_path_str(p,pathstr);
+    printf("%s\n",pathstr);
+ }
 
 void igraph_path_clear(Path *p) {
 
