@@ -531,10 +531,10 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, Paths *pa
   
   if(m==0) {
    for(int i=0;i<n;i++) {
-     Path path;
-     igraph_path_init(&path,1);
-     VECTOR(path)[0] = i;
-     igraph_paths_add(paths,&path); 
+     Path* path = (Path*) malloc(sizeof(Path*));
+     igraph_path_init(path,1);
+     VECTOR(*path)[0] = i;
+     igraph_paths_add(paths,path); 
 //     printf("\ndepth=%d,Paths=",depth);igraph_paths_print(paths);
    }
      return n;
@@ -613,6 +613,7 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, Paths *pa
 	maxc[i] = loc[i]- j;  /* Maximum contribution or number of vertices in the elvel */
 
       igraph_t subg;
+      igraph_i_set_attribute_table(&igraph_cattribute_table);
       igraph_vs_t vs;
       igraph_vs_seq(&vs,j,loc[i]-1);
       igraph_vector_t map,invmap;
@@ -633,14 +634,14 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, Paths *pa
 //	 printf("\nDepth=%d L%d: k=%d",depth,i,k);igraph_path_print(p);
 	 for( int m=0;m<igraph_path_size(p);m++) 
 		VECTOR(*p)[m]=	(int)VECTOR(invmap)[(int)VECTOR(*p)[m]];
-//	 printf("\nDepth=%d L%d: k=%d Path=",depth,i,k);igraph_path_print(p);
+	 printf("\nDepth=%d L%d: k=%d Path=",depth,i,k);igraph_path_print(p);
       }	
        printf("\nDepth=%d L%d: Paths=",depth,i);igraph_paths_print(lpaths[i]);
  //     printf("\n[%s]|%s L%d paths=%d",gname,depthstring,i,subpaths);
       npaths= npaths + spaths - 1;
 
       igraph_vector_destroy(&subY);
-      igraph_destroy(&subg);
+//      igraph_destroy(&subg);
 
       extra[i]=(need-minc[i]);
       contr[i]=(maxc[i]-need);
