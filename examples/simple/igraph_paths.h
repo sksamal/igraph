@@ -154,7 +154,7 @@ void igraph_paths_str(Paths *ps, char *pathsstr) {
    char pathstr[100];
    for(int i=0; i<igraph_paths_size(ps);i++)
     {
-       igraph_path_str((Path*)VECTOR(*ps)[i],pathstr);  
+       igraph_path_str(VECTOR(*ps)[i],pathstr);  
        if(i==igraph_paths_size(ps)-1)
        	  sprintf(pathsstr,"%s%s",pathsstr,pathstr);
        else

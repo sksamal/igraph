@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
   iso1=-1, iso2=-1;
   clock_t start,end1,end2;
   start = clock();
-  isHamUsingLAD(&gmap1,&iso1, path1);
+//  isHamUsingLAD(&gmap1,&iso1, path1);
   end1 = clock();
   printf("\nLAD took %lf secs",(end1-start)/1000000.0);
   isHamUsingVF2(&gmap1,&iso2, path2);
