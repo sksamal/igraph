@@ -184,6 +184,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 		  if(!connected) {
 //		     if(atfree) printf("\nB(%d,%d): (",w,j);
 		     atfree=0;
+		     printf("\n%d misses a path through %d-%d-%d",j,w,v,u);
 		     /* Did I connect it already(just now?) */
 		     igraph_are_connected(g1,u,j,&connected);
 //		     if(!connected) printf("Connect %d---%d and ",u,j);
@@ -242,6 +243,7 @@ igraph_bool_t isDominSatisfied(igraph_t* g, int j, int *loc, igraph_vector_t *fn
 	          igraph_are_connected(g,u,w,&connected);
 		  if(!connected) {
 //		     if(atfree) printf("\nF(%d,%d): ( ",j,w);
+		     printf("\n%d misses a path through %d-%d-%d",w,j,v,u);
 		     atfree=0;
 		     igraph_are_connected(g1,u,w,&connected);
 //		     if(!connected) printf("Connect %d---%d and ",u,w);
@@ -566,20 +568,26 @@ int pathCover(igraph_t* g, char *gname, int depth, igraph_vector_t *Y, Paths *pa
 //  exportToDot(g,loc,dia+1,sname,"maxPaths",NULL,0);
   /*Run LBFS */
   LBFS(g,Y,&X,&label1,&map1);
+  while(igraph_vector_size(&X)>1)
+	igraph_vector_remove(&X,0);
+  igraph_vector_null(&map1);
+  igraph_vector_null(&label1);
+  igraph_vector_clear(Y);
+  LBFS(g,&X,Y,&label1,&map1);
  
   /* Align to Grid */
   igraph_vector_null(&map1);
-  OrderGrid(g,loc,dia+1,&X,&map1);
+  OrderGrid(g,loc,dia+1,Y,&map1);
 //  sprintf(sname,"%s_lbfs1",gname);
 //  exportToDot(g,loc,dia+1,sname,"lbfs1",&map1,0);
 
   /* Run LBFS again from other-side */
-  igraph_vector_clear(Y);
-  LBFS(g,&X,Y,&label2,&map2);
+  igraph_vector_clear(&X);
+  LBFS(g,Y,&X,&label2,&map2);
 
   /* Map to grid again */
   igraph_vector_null(&map2);
-  OrderGrid(g,loc,dia+1,Y,&map2);
+  OrderGrid(g,loc,dia+1,&X,&map2);
 //  sprintf(sname,"%s_lbfs2",gname);
 //  exportToDot(g,loc,dia+1,sname,"lbfs2",&map2,0);
 
@@ -765,22 +773,30 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
   char sname[200];
  // sprintf(sname,"%s_original",gname);
 //  exportToDot(g,loc,dia+1,sname,"maxPaths",NULL,0);
-  /*Run LBFS */
+  /*Run LBFS twice to get the handle properly*/
   LBFS(g,Y,&X,&label1,&map1);
+
+  /* Reduce X to length 1 */
+  while(igraph_vector_size(&X)>1)
+	igraph_vector_remove(&X,0);
+  igraph_vector_null(&map1);
+  igraph_vector_null(&label1);
+  igraph_vector_clear(Y);
+  LBFS(g,&X,Y,&label1,&map1);
  
   /* Align to Grid */
   igraph_vector_null(&map1);
-  OrderGrid(g,loc,dia+1,&X,&map1);
-//  sprintf(sname,"%s_lbfs1",gname);
-//  exportToDot(g,loc,dia+1,sname,"lbfs1",&map1,0);
+  OrderGrid(g,loc,dia+1,Y,&map1);
+  sprintf(sname,"%s_lbfs1",gname);
+  exportToDot(g,loc,dia+1,sname,"lbfs1",&map1,0);
 
   /* Run LBFS again from other-side */
-  igraph_vector_clear(Y);
-  LBFS(g,&X,Y,&label2,&map2);
+  igraph_vector_clear(&X);
+  LBFS(g,Y,&X,&label2,&map2);
 
   /* Map to grid again */
   igraph_vector_null(&map2);
-  OrderGrid(g,loc,dia+1,Y,&map2);
+  OrderGrid(g,loc,dia+1,&X,&map2);
 //  sprintf(sname,"%s_lbfs2",gname);
 //  exportToDot(g,loc,dia+1,sname,"lbfs2",&map2,0);
 
@@ -1139,12 +1155,30 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph
   char sspos[680];
   char sname[200];
 
+  /* Export the original graph */
   sprintf(sname,"%s",gname);  
   sprintf(sspos,"Graph=%s",sname);
-  exportToDot(g,loc,dia+1,sname,sspos,NULL,0);
+  if(depth==0) exportToDot(g,loc,dia+1,sname,sspos,NULL,0);
+
+  /* Run LBFS from random vertex to get one end */
   LBFS(g,Y,X,&label1,&map1);
-//  printf("\n Y="); igraph_vector_print(Y);
-//  printf(" X="); igraph_vector_print(X);
+  printf("\n|%sY=",depthstring); igraph_vector_print(Y);
+  printf("|%sX=",depthstring); igraph_vector_print(X);
+
+  /* It may endup in getting both the ends in some cases (low diameter?) 
+ *   hence keep only one vertex in X and start 2-LBFS */
+  while(1<igraph_vector_size(X)) 
+	igraph_vector_remove(X,0);
+  printf("|%sUsing X=",depthstring); igraph_vector_print(X);
+  igraph_vector_null(&label1);
+  igraph_vector_null(&map1);
+
+  /* First call - uses X to get Y */
+  igraph_vector_clear(Y);
+  LBFS(g,X,Y,&label1,&map1);
+
+  printf("\n|%sX=",depthstring); igraph_vector_print(X);
+  printf("|%sY=",depthstring); igraph_vector_print(Y);
 
   char x[100], y[100];
   for(int i=0;i<igraph_vector_size(X);i++) {
@@ -1157,19 +1191,21 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph
 	else  	 sprintf(y,"%s %d",y,(int)VECTOR(*Y)[i]);
   }
 
+  /* Re order the vertices and export */
   igraph_vector_null(&map1);
-  OrderGrid(g,loc,dia+1,X,&map1);
+  OrderGrid(g,loc,dia+1,Y,&map1);
 //  printf("\n Loc=");
 //  for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
   sprintf(sname,"lbfs1-%s",gname);  
   sprintf(sspos,"Graph=%s,Y=[%s] , X=[%s]  ",sname,y,x);
-//  exportToDot(g,loc,dia+1,sname,sspos,&map1,0);
+  if(depth==0) exportToDot(g,loc,dia+1,sname,sspos,&map1,0);
 
-  igraph_vector_clear(Y);
-  LBFS(g,X,Y,&label2,map2);
-  printf("\n|%sX=",depthstring); igraph_vector_print(X);
-  printf("|%sY=",depthstring); igraph_vector_print(Y);
-
+  /* Second call - Updates X based on set Y */
+  igraph_vector_clear(X);
+  LBFS(g,Y,X,&label2,map2);
+  printf("\n|%sY=",depthstring); igraph_vector_print(X);
+  printf("|%sX=",depthstring); igraph_vector_print(Y);
+ 
   for(int i=0;i<igraph_vector_size(X);i++) {
 	if(i==0) sprintf(x,"%d",(int)VECTOR(*X)[0]);
 	else  	 sprintf(x,"%s %d",x,(int)VECTOR(*X)[i]);
@@ -1180,8 +1216,9 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph
 	else  	 sprintf(y,"%s %d",y,(int)VECTOR(*Y)[i]);
   }
 
+  /* Orders into levels */
   igraph_vector_null(map2);
-  OrderGrid(g,loc,dia+1,Y,map2);
+  OrderGrid(g,loc,dia+1,X,map2);
 //  printf("\n Loc=");
 //  for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
   //printf("\nmap1="); igraph_vector_print(&map1);
@@ -1218,12 +1255,12 @@ igraph_bool_t processForAT(igraph_t *g, char *gname, int depth, int *loc, igraph
   /* Print the graph g with ATFree result */
   sprintf(sname,"lbfs2-%s",gname);  
   sprintf(sspos,"Graph=%s,X=[%s],Y=[%s],ATFree=%d ",sname,x,y,isatfree);
-  exportToDot(g,loc,dia+1,sname,sspos,map2,0);
+  if(depth==0) exportToDot(g,loc,dia+1,sname,sspos,map2,0);
 
   /* Export mapped versions */
   sprintf(sname,"maplbfs2-%s",gname);  
   sprintf(sspos,"Graph=%s (mapped),X=[],Y=[],ATFree=%d ",sname,isatfree);
-  exportToDot(&gmap,loc,dia+1,sname,sspos,NULL,0);
+  if(depth==0) exportToDot(&gmap,loc,dia+1,sname,sspos,NULL,0);
 
 /*
   sprintf(sname,"remaplbfs2-%s",gname);  
@@ -1305,6 +1342,13 @@ igraph_bool_t processForDP(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   LBFS(g,Y,X,&label1,&map1);
 //  printf("\n|Y="); igraph_vector_print(Y);
 //  printf("|X="); igraph_vector_print(X);
+  igraph_vector_null(&map1);
+  igraph_vector_null(&label1);
+  igraph_vector_clear(Y);
+  while(igraph_vector_size(X)>1)
+     igraph_vector_remove(X,0);
+//  printf("|Using X="); igraph_vector_print(X);
+  LBFS(g,X,Y,&label1,&map1);
 
   char x[100], y[100];
   for(int i=0;i<igraph_vector_size(X);i++) {
@@ -1318,15 +1362,15 @@ igraph_bool_t processForDP(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   }
 
   igraph_vector_null(&map1);
-  OrderGrid(g,loc,dia+1,X,&map1);
+  OrderGrid(g,loc,dia+1,Y,&map1);
 //  printf("\n Loc=");
 //  for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
   sprintf(sname,"lbfs1-%s",gname);  
   sprintf(sspos,"Graph=%s,Y=[%s] , X=[%s]  ",sname,y,x);
 //  exportToDot(g,loc,dia+1,sname,sspos,&map1,0);
 
-  igraph_vector_clear(Y);
-  LBFS(g,X,Y,&label2,map2);
+  igraph_vector_clear(X);
+  LBFS(g,Y,X,&label2,map2);
   printf("\n|X="); igraph_vector_print(X);
   printf("|Y="); igraph_vector_print(Y);
 
@@ -1341,7 +1385,7 @@ igraph_bool_t processForDP(igraph_t *g, char *gname, int *loc, igraph_vector_t *
   }
 
   igraph_vector_null(map2);
-  OrderGrid(g,loc,dia+1,Y,map2);
+  OrderGrid(g,loc,dia+1,X,map2);
 //  printf("\n Loc=");
 //  for(int i=0;i<dia+1;i++) printf(" %d ",loc[i]);
   //printf("\nmap1="); igraph_vector_print(&map1);
