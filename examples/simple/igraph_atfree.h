@@ -865,15 +865,21 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
       igraph_vector_init(&subY,0);
       int subpaths = minc[i] = minPaths(&subg, ggname,depth+1,&subY);
  //     printf("\n[%s]|%s L%d paths=%d",gname,depthstring,i,subpaths);
-      paths= paths + subpaths - 1;
+ 
+      /* needc = 12221 for ham path cover */
+//      int needc=(i==0||i==d)?1:2;
+      int needc=(i==0||i==dia)?1:2;
+
+      paths= paths + subpaths - needc;
       igraph_vector_destroy(&subY);
       igraph_destroy(&subg);
 
-      extra[i]=(1-minc[i]);
-      contr[i]=(maxc[i]-1);
+      extra[i]=(needc-minc[i]);
+      contr[i]=(maxc[i]-needc);
       if(extra[i]<0) recalc = 1; 
-      printf("\n[%s]|%s Level [minc,maxc] needc extra contr noDeg oneDeg twoDeg",gname,depthstring);
-      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i],noDeg[i],oneDeg[i],twoDeg[i]);
+      if(i==0)
+      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr noDeg oneDeg twoDeg",gname,depthstring);
+      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],needc,extra[i],contr[i],noDeg[i],oneDeg[i],twoDeg[i]);
       if(oneDeg[i]>=2) oneDeg[i]-=2;
       else if(oneDeg[i]==1 && twoDeg[i]>=1) oneDeg[i]=0;
     }
