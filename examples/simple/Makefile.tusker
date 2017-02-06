@@ -15,7 +15,7 @@ CFLAGS=-g
 OBJ_DIR=.
 SRC_DIR=.
 
-all : clean igraph_atfree igraph_atdegseqgen igraph_dprandomgen igraph_reg_atgen igraph_atrandomgen igraph_atfree igraph_atread igraph_atgen igraph_dpread 
+all : clean igraph_atfree igraph_atdegseqgen igraph_dprandomgen igraph_reg_atgen igraph_atrandomgen igraph_atfree igraph_atread igraph_atgen igraph_dpread igraph_test
 
 alll :
 	for file in *.c ; do \
@@ -51,9 +51,10 @@ genat: igraph_atgen igraph_atread
 done ;
 
 testat: igraph_atread
-	./clean.sh \
+	./clean.sh; \
 	ssh ssamal@cse.unl.edu "igraph/clean.sh igraph"; \
-	for file in `ls atgraph?.dot.edg atgraph???.dot.edg` ; do \
+#	for file in `ls atgraph[0-9].dot.edg atgraph[0-9][0-9][0-9].dot.edg` ; do \
+	for file in `ls atgraph[0-9][0-9][0-9].dot.edg` ; do \
         pre=`basename $$file .dot.edg`; \
 	./igraph_atread $$pre > $$pre.txt; \
 done ;
