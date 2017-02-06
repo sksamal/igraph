@@ -820,7 +820,7 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 
    int paths=1;
    int contr[dia+1], extra[dia+1], maxc[dia+1], minc[dia+1];
-   int noDeg[dia+1], oneDeg[dia+1], twoDeg[dia+1];
+   int noDeg[dia+1], oneDeg[dia+1], twoDeg[dia+1], needc[dia+1];
    igraph_bool_t recalc = 0;
   /* Get the subgraphs for each level and recursively call the method if 
    * it has any edges */ 
@@ -829,9 +829,9 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
       int j= (i==0)?0:loc[i-1];
       maxc[i] = loc[i]- j;  /* Maximum contribution or number of vertices in the elvel */
 
+      noDeg[i]=loc[i]-j, oneDeg[i]=0, twoDeg[i]=0;
      if(i!=dia) {
       int outdeg[loc[i]-j], indeg[loc[i+1]-loc[i]];
-      noDeg[i]=loc[i]-j, oneDeg[i]=0, twoDeg[i]=0;
       for(int k1=0; k1<loc[i]-j; k1++)   outdeg[k1]=0;
       for(int k2=0; k2<loc[i+1]-loc[i];k2++)  outdeg[k2]=0;
 
@@ -868,21 +868,25 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
  
       /* needc = 12221 for ham path cover */
 //      int needc=(i==0||i==d)?1:2;
-      int needc=(i==0||i==dia)?1:2;
+      needc[i]=(i==0||i==dia)?1:2;
 
-      paths= paths + subpaths - needc;
+      paths= paths + subpaths - 1;
       igraph_vector_destroy(&subY);
       igraph_destroy(&subg);
 
-      extra[i]=(needc-minc[i]);
-      contr[i]=(maxc[i]-needc);
+      extra[i]=(needc[i]-minc[i]);
+      contr[i]=(maxc[i]-needc[i]);
       if(extra[i]<0) recalc = 1; 
-      if(i==0)
-      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr noDeg oneDeg twoDeg",gname,depthstring);
-      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],needc,extra[i],contr[i],noDeg[i],oneDeg[i],twoDeg[i]);
+//      if(i==0)
+//      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr noDeg oneDeg twoDeg",gname,depthstring);
+//      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],needc,extra[i],contr[i],noDeg[i],oneDeg[i],twoDeg[i]);
       if(oneDeg[i]>=2) oneDeg[i]-=2;
       else if(oneDeg[i]==1 && twoDeg[i]>=1) oneDeg[i]=0;
     }
+
+      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr noDeg oneDeg twoDeg",gname,depthstring);
+     for(int i=0;i<dia+1;i++)
+      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noDeg[i],oneDeg[i],twoDeg[i]);
 
    if(recalc) 
     {
@@ -898,6 +902,9 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 	        paths= paths - extra[l];
 	 }
 	
+      	printf("\n\n[%s]|%s Level [minc,maxc] needc extra contr noDeg oneDeg twoDeg",gname,depthstring);
+     for(int i=0;i<dia+1;i++)
+      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noDeg[i],oneDeg[i],twoDeg[i]);
   //    printf("\n[%s]|%s Level [minc,maxc] needc extra contr",gname,depthstring);
   //    for(int i=0;i<dia+1;i++)
   //    	printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i]);
