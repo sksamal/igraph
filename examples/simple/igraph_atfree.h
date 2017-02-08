@@ -820,7 +820,7 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 
    int paths=1;
    int contr[dia+1], extra[dia+1], maxc[dia+1], minc[dia+1];
-   int noDeg[dia+1], oneDeg[dia+1], twoDeg[dia+1], needc[dia+1];
+   int noOutDeg[dia+1], oneOutDeg[dia+1], twoOutDeg[dia+1], noInDeg[dia+1], oneInDeg[dia+1], twoInDeg[dia+1], needc[dia+1];
    igraph_bool_t recalc = 0;
   /* Get the subgraphs for each level and recursively call the method if 
    * it has any edges */ 
@@ -829,11 +829,13 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
       int j= (i==0)?0:loc[i-1];
       maxc[i] = loc[i]- j;  /* Maximum contribution or number of vertices in the elvel */
 
-      noDeg[i]=loc[i]-j, oneDeg[i]=0, twoDeg[i]=0;
+      noOutDeg[i]=loc[i]-j, oneOutDeg[i]=0, twoOutDeg[i]=0;
+     if(i==0) {noInDeg[i]=loc[i]-j, oneInDeg[i]=0, twoInDeg[i]=0;}
      if(i!=dia) {
+      noInDeg[i+1]=loc[i+1]-loc[i], oneInDeg[i+1]=0, twoInDeg[i+1]=0;
       int outdeg[loc[i]-j], indeg[loc[i+1]-loc[i]];
       for(int k1=0; k1<loc[i]-j; k1++)   outdeg[k1]=0;
-      for(int k2=0; k2<loc[i+1]-loc[i];k2++)  outdeg[k2]=0;
+      for(int k2=0; k2<loc[i+1]-loc[i];k2++)  indeg[k2]=0;
 
       for(int k1=0; k1<loc[i]-j; k1++) 
 	for(int k2=0; k2<loc[i+1]-loc[i];k2++)
@@ -842,9 +844,11 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 	   igraph_are_connected(&gmap,j+k1,loc[i]+k2,&isconn);
 	   if(isconn) 
 	    { outdeg[k1]++; 
-	      if(outdeg[k1]==1) { noDeg[i]--; oneDeg[i]++; } 
-	      if(outdeg[k1]==2) { oneDeg[i]--; twoDeg[i]++; }
 	      indeg[k2]++; 
+	      if(outdeg[k1]==1) { noOutDeg[i]--; oneOutDeg[i]++; } 
+	      if(outdeg[k1]==2) { oneOutDeg[i]--; twoOutDeg[i]++; }
+	      if(indeg[k2]==1) { noInDeg[i+1]--; oneInDeg[i+1]++; } 
+	      if(indeg[k2]==2) { oneInDeg[i+1]--; twoInDeg[i+1]++; }
 	    }
 	 }
 	}
@@ -868,7 +872,7 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
  
       /* needc = 12221 for ham path cover */
 //      int needc=(i==0||i==d)?1:2;
-      needc[i]=(i==0||i==dia)?1:2;
+      needc[i]=1;//(i==0||i==dia)?1:2;
 
       paths= paths + subpaths - 1;
       igraph_vector_destroy(&subY);
@@ -880,31 +884,31 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 //      if(i==0)
 //      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr noDeg oneDeg twoDeg",gname,depthstring);
 //      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],needc,extra[i],contr[i],noDeg[i],oneDeg[i],twoDeg[i]);
-      if(oneDeg[i]>=2) oneDeg[i]-=2;
-      else if(oneDeg[i]==1 && twoDeg[i]>=1) oneDeg[i]=0;
+      if(oneOutDeg[i]>=needc[i]) oneOutDeg[i]-=needc[i];
+      else if(oneOutDeg[i]<needc[i] && twoOutDeg[i]>=needc[i]-oneOutDeg[i]) { twoOutDeg[i] = twoOutDeg[i] -needc[i] -oneOutDeg[i]; oneOutDeg[i]=0; }
     }
 
-      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr noDeg oneDeg twoDeg",gname,depthstring);
+      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
      for(int i=0;i<dia+1;i++)
-      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noDeg[i],oneDeg[i],twoDeg[i]);
+      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
 
    if(recalc) 
     {
 	paths=1;
    	for(int l=0;l<dia+1;l++) {
 		if(l!=0)  
-		   while(extra[l]<0 && contr[l-1]>0 && twoDeg[l]>0)
-			{ extra[l]++; contr[l-1]--; twoDeg[l]--;}
+		   while(extra[l]<0 && contr[l-1]>0 && twoInDeg[l]>0)
+			{ extra[l]++; contr[l-1]--; twoInDeg[l]--;}
 		if(l!=dia)
-		   while(extra[l]<0 && contr[l+1]>0 && twoDeg[l]>0)
-			{ extra[l]++; contr[l+1]--; twoDeg[l]--;}
+		   while(extra[l]<0 && contr[l+1]>0 && twoOutDeg[l]>0)
+			{ extra[l]++; contr[l+1]--; twoOutDeg[l]--;}
   //     		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
 	        paths= paths - extra[l];
 	 }
 	
-      	printf("\n\n[%s]|%s Level [minc,maxc] needc extra contr noDeg oneDeg twoDeg",gname,depthstring);
+      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
      for(int i=0;i<dia+1;i++)
-      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noDeg[i],oneDeg[i],twoDeg[i]);
+      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
   //    printf("\n[%s]|%s Level [minc,maxc] needc extra contr",gname,depthstring);
   //    for(int i=0;i<dia+1;i++)
   //    	printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i]);
