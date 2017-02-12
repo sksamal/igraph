@@ -798,8 +798,8 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
   /* Map to grid again */
   igraph_vector_null(&map2);
   OrderGrid(g,loc,dia+1,&X,&map2);
-//  sprintf(sname,"%s_lbfs2",gname);
-//  exportToDot(g,loc,dia+1,sname,"lbfs2",&map2,0);
+  sprintf(sname,"%s_lbfs2",gname);
+  exportToDot(g,loc,dia+1,sname,"lbfs2",&map2,0);
 
   // Map the graph to gmap on which we will work
   igraph_vector_t invmap2;
@@ -888,13 +888,14 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
       else if(oneOutDeg[i]<needc[i] && twoOutDeg[i]>=needc[i]-oneOutDeg[i]) { twoOutDeg[i] = twoOutDeg[i] -needc[i] -oneOutDeg[i]; oneOutDeg[i]=0; }
     }
 
-      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
+      	printf("\nAfter adjusting for need:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
      for(int i=0;i<dia+1;i++)
       printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
 
    if(recalc) 
     {
 	paths=1;
+	int extraa=1;
    	for(int l=0;l<dia+1;l++) {
 		if(l!=0)  
 		   while(extra[l]<0 && contr[l-1]>0 && twoInDeg[l]>0)
@@ -903,10 +904,25 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 		   while(extra[l]<0 && contr[l+1]>0 && twoOutDeg[l]>0)
 			{ extra[l]++; contr[l+1]--; twoOutDeg[l]--;}
   //     		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
-	        paths= paths - extra[l];
+  		/* See if we can extend the first end separately */
+       		if(l!=0) if(extra[l]<0 && extraa) extra[l]++; else extraa=0;
+	        if(extra[l]<0) paths= paths - extra[l];
 	 }
+      	
+	printf("\nAfter exchanging with neighbors and left extension:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
+     for(int i=0;i<dia+1;i++)
+      printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
+
+  	/* See if we can extend the last end and bring it back */
+	extraa=1;
+   	for(int l=dia-1;l>=0;l--) {
+       		if(extra[l]<0 && extraa) 
+		    { extra[l]++; paths--;} 
+		else extraa=0;
+	}
+
 	
-      	printf("\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
+      	printf("\nAfter right extension:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
      for(int i=0;i<dia+1;i++)
       printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
   //    printf("\n[%s]|%s Level [minc,maxc] needc extra contr",gname,depthstring);
