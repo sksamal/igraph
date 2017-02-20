@@ -64,18 +64,20 @@ int main(int argc, char** argv) {
   igraph_diameter(&g,&dia,0,0,0,IGRAPH_UNDIRECTED,1);
 //  printf(", Diameter=%d",dia);
 
-  igraph_vector_t X;
+  igraph_vector_t X, Y1;
+  igraph_vector_t X1;
+  igraph_vector_init(&X1,0);
   char sspos[680];
   char sname[30];
   char gname[100];
   int loc[dia+1];
-  igraph_t gmap1;
-  igraph_vector_t map2;
+  igraph_t gmap1, gmap11;
+  igraph_vector_t map2, map21;
   sprintf(gname,"%s_%d",argv[1],iter);
   /* Calculate dominating pair sets X and Y after arranging the graph 
    * and see if it is DP */
   igraph_bool_t isdp = processForDP(&g,gname,loc,&X,&Y,&map2,&gmap1);
-
+//  isdp = isdp & processForDP(&g,gname,loc,&Y1,&X1,&map21,&gmap11);
   if(isdp) printf("\nG is DP");
   else printf("\nG is not DP");
 
@@ -133,15 +135,17 @@ int main(int argc, char** argv) {
   igraph_write_graph_edgelist(&g, fp);
   fclose(fp);
 
-  sprintf(sspos,"%s_%d.dot.edg",argv[1],iter);  
+  sprintf(sspos,"%s_%d1.dot.edg",argv[1],iter);  
   fp = fopen(sspos,"w");
-  igraph_write_graph_edgelist(&g, fp);
+  igraph_write_graph_edgelist(&gmap1, fp);
   fclose(fp);
 
   igraph_vector_destroy(&map2);
+  igraph_vector_destroy(&map21);
   igraph_vector_destroy(&X);
   igraph_destroy(&gmap1);
   igraph_destroy(&gmap2);
+  igraph_destroy(&gmap11);
   igraph_vs_destroy(&vs);
  }
 

@@ -120,8 +120,9 @@ int main(int argc, char** argv) {
 
   igraph_vs_t vs;
   igraph_vs_vector(&vs, &X);
-  printf("\nMinPaths=%d\n",minPaths(&g,argv[1],0,&Y));
-  Paths pc;
+  printf("\nMinPaths(from Y) =%d\n",minPaths(&g,argv[1],0,&Y));
+  printf("\nMinPaths(from X)=%d\n",minPaths(&g,argv[1],0,&X));
+//  Paths pc;
 //  igraph_paths_init(&pc,0);
 //  pathCover(&g,argv[1],0,&Y,&pc);
 //  char pstr[500];

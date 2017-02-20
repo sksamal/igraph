@@ -755,6 +755,30 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
   return n;
   }
 
+  /* If graph has multiple components, then call the method
+  * for each component  and add and return*/
+  igraph_bool_t res;
+  igraph_is_connected(g,&res,0);
+  if(!res) 
+  {
+    igraph_vector_ptr_t comps;
+    igraph_vector_ptr_init(&comps,0);
+    igraph_decompose(g,&comps,0,-1,0);
+    int paths=0;
+    for(int i=0;i<igraph_vector_ptr_size(&comps);i++)
+	{
+	  igraph_t *compg = VECTOR(comps)[i];
+	  igraph_vector_t compY;
+          igraph_vector_init(&compY,0); 
+	  char compname[100];
+	  sprintf(compname,"%s%d",gname,i);
+	  paths+=minPaths(compg,compname,depth,&compY);
+     	  igraph_vector_destroy(&compY);
+	}
+     igraph_decompose_destroy(&comps);
+     return paths;
+   }	
+
   igraph_vector_init(&map1,n);
   igraph_vector_init(&map2,n);
   igraph_vector_init(&label1,n);
@@ -888,10 +912,10 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
       else if(oneOutDeg[i]<needc[i] && twoOutDeg[i]>=needc[i]-oneOutDeg[i]) { twoOutDeg[i] = twoOutDeg[i] -needc[i] -oneOutDeg[i]; oneOutDeg[i]=0; }
     }
 
-      	printf("\nAfter adjusting for need:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
+      	printf("\n\nAfter adjusting for need:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
      for(int i=0;i<dia+1;i++)
       printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
-
+     printf("\nPaths=%d",paths);
    if(recalc) 
     {
 	paths=1;
@@ -904,14 +928,15 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 		   while(extra[l]<0 && contr[l+1]>0 && twoOutDeg[l]>0)
 			{ extra[l]++; contr[l+1]--; twoOutDeg[l]--;}
   //     		printf("\n%5d| [%3d,%3d]  %5d %5d %5d",l,minc[l],maxc[l],needc[l],extra[l],contr[l]);
-  		/* See if we can extend the first end separately */
+  		/* See if we can extend the left end separately */
        		if(l!=0) if(extra[l]<0 && extraa) extra[l]++; else extraa=0;
 	        if(extra[l]<0) paths= paths - extra[l];
 	 }
       	
-	printf("\nAfter exchanging with neighbors and left extension:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
+	printf("\n\nAfter exchanging with neighbors and left extension:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
      for(int i=0;i<dia+1;i++)
       printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
+     printf("\nPaths=%d",paths);
 
   	/* See if we can extend the last end and bring it back */
 	extraa=1;
@@ -922,9 +947,10 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 	}
 
 	
-      	printf("\nAfter right extension:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
+      	printf("\n\nAfter right extension:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
      for(int i=0;i<dia+1;i++)
       printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
+     printf("\nPaths=%d",paths);
   //    printf("\n[%s]|%s Level [minc,maxc] needc extra contr",gname,depthstring);
   //    for(int i=0;i<dia+1;i++)
   //    	printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d",gname,depthstring,i,minc[i],maxc[i],1,extra[i],contr[i]);
