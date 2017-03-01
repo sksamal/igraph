@@ -9,15 +9,226 @@
 #define MLEVELS 7
 #define LSIZE 7 
 
-//	     0	   1      2        3       4      5      6        7      8       9 
-enum label { box, cross, pzeep , pyesp , pzeel , pyesl , lzeep , lyesp , lzeel , lyesl };
+//	      0	   1      2        3       4      5      6        7      8       9     10
+enum label { none, box, cross, pzeep , pyesp , pzeel , pyesl , lzeep , lyesp , lzeel , lyesl };
+enum strt { n, l , z , s , ps, pz}; 
 
-struct {
-   unsigned u1:4, d1:4;  // three to store connections, last bit for activation
-   unsigned u2:4, d2:4;
-   enum label type; 
-   int start
-  } unit; 
+struct port {
+   unsigned int bit[8]; /* 8 bits */
+   unsigned int active;
+};
+typedef struct port at_port;
+
+
+struct unit {
+    at_port p1, p2;  // three to store connections, last bit for activation
+  };
+typedef struct unit at_unit;
+
+struct node {
+   at_unit *atu;
+   struct node *next;
+   enum label type;
+  };
+typedef struct node at_row;
+
+void init_unit(at_unit *atu, enum strt lbl);
+void append_unit(at_row *head, at_unit *atu);
+void create_structure(at_row *atr, enum label lbl) ;
+void create_dunit(at_row *head, enum label lbl);
+
+void init_unit(at_unit *atu, enum strt lbl) {
+
+    atu->p1.bit[0] = (atu->p1.bit[0] | 1); 
+    atu->p2.bit[0] = (atu->p2.bit[0] | 1); 
+
+   switch (lbl) {
+
+	case l:
+	    atu->p2.bit[3] = atu->p1.bit[2] = 1; 
+	    break; 
+
+	case s:
+	    atu->p1.bit[4] =  1; 
+	    break; 
+
+        case z:
+	    atu->p2.bit[7] = 1; 
+	    break; 
+
+	case ps:
+	    atu->p1.bit[4] =  1; 
+	    atu->p2.bit[5] =  1; 
+	    break; 
+	
+	case pz:
+	    atu->p1.bit[6] =  1; 
+	    atu->p2.bit[7] =  1; 
+	    break; 
+	
+      }
+ }
+
+void append_unit(at_row *head, at_unit *atu) {
+ 
+    at_row *node = (at_row*)malloc(sizeof(at_row*));
+    at_row *tail = head;
+    if(head == NULL) 
+       { head = node; return; }
+
+    while(tail->next!=NULL) tail=tail->next; 
+    node->atu = atu;
+    node->next = NULL;
+    tail->next = node;
+
+    tail->atu->p1.bit[0] = atu->p1.bit[1] = (tail->atu->p1.bit[0] | atu->p1.bit[1]); 
+    tail->atu->p2.bit[0] = atu->p2.bit[1] = (tail->atu->p2.bit[0] | atu->p2.bit[1]); 
+     
+    tail->atu->p1.bit[4] = atu->p2.bit[5] = (tail->atu->p1.bit[4] | atu->p2.bit[5]); 
+    tail->atu->p2.bit[7] = atu->p1.bit[6] = (tail->atu->p1.bit[7] | atu->p2.bit[6]); 
+ }
+     
+void create_dunit(at_row *head, enum label lbl) {
+
+    at_unit *atu1 = (at_unit*)malloc(sizeof(at_unit*));
+    at_unit *atu2 = (at_unit*)malloc(sizeof(at_unit*));
+    at_row *node2 = (at_row*)malloc(sizeof(at_row*));
+    node2->atu = atu2;
+    head->atu = atu1;
+    head->next = node2;
+    node2->next = NULL;
+
+   switch (lbl) {
+
+	case box:
+	    init_unit(atu1,l);
+	    init_unit(atu2,l);
+	    break; 
+
+	case cross:
+	    init_unit(atu1,s);
+	    init_unit(atu1,z);
+	    break; 
+
+        case pzeep:
+	    init_unit(atu1,pz);
+	    init_unit(atu2,z);
+	    break; 
+			
+        case pyesp:
+	    init_unit(atu1,ps);
+	    init_unit(atu2,s);
+	    break; 
+			
+        case pzeel:
+	    init_unit(atu1,pz);
+	    init_unit(atu2,l);
+	    break; 
+   
+        case pyesl:
+	    init_unit(atu1,ps);
+	    init_unit(atu2,l);
+	    break; 
+
+        case lzeep:
+	    init_unit(atu1,l);
+	    init_unit(atu1,z);
+	    init_unit(atu2,z);
+	    break; 
+   
+        case lyesp:
+	    init_unit(atu1,l);
+	    init_unit(atu1,s);
+	    init_unit(atu2,s);
+	    break; 
+
+        case lzeel:
+	    init_unit(atu1,l);
+	    init_unit(atu1,z);
+	    init_unit(atu2,l);
+	    break; 
+   
+        case lyesl:
+	    init_unit(atu1,l);
+	    init_unit(atu1,s);
+	    init_unit(atu2,l);
+	    break; 
+      }
+	    append_unit(head,atu2);
+ }
+
+void create_structure(at_row *head, enum label lbl) {
+
+    at_unit *atu1 = (at_unit*)malloc(sizeof(at_unit*));
+    at_unit *atu2 = (at_unit*)malloc(sizeof(at_unit*));
+    at_row *node2 = (at_row*)malloc(sizeof(at_row*));
+    atu1->p1.bit[0] = atu2->p1.bit[1] = (atu1->p1.bit[0] | 1); 
+    atu1->p2.bit[0] = atu2->p2.bit[1] = (atu1->p2.bit[0] | 1); 
+    head->atu = atu1;
+    head->next = node2;
+    node2->atu = atu2;
+    node2->next = NULL;
+
+   switch (lbl) {
+
+	case box:
+	    atu1->p2.bit[3] = atu1->p1.bit[2] = (atu1->p1.bit[2] | 1); 
+	    atu2->p2.bit[3] = atu2->p1.bit[2] = (atu2->p1.bit[2] | 1); 
+	    break; 
+
+	case cross:
+	    atu2->p2.bit[5] = atu1->p1.bit[4] = (atu1->p1.bit[4] | 1); 
+	    atu2->p1.bit[6] = atu1->p2.bit[7] = (atu1->p2.bit[7] | 1); 
+	    break; 
+
+        case pzeep:
+	    atu2->p2.bit[7] = atu1->p1.bit[6] = (atu1->p1.bit[6] | 1); 
+	    atu2->p1.bit[6] = atu1->p2.bit[7] = (atu1->p2.bit[7] | 1); 
+	    break; 
+			
+        case pyesp:
+	    atu2->p1.bit[4] = atu1->p2.bit[5] = (atu1->p1.bit[5] | 1); 
+	    atu2->p2.bit[5] = atu1->p1.bit[4] = (atu1->p2.bit[4] | 1); 
+	    break; 
+			
+        case pzeel:
+	    atu1->p1.bit[6] = (atu1->p1.bit[6] | 1); 
+	    atu2->p1.bit[6] = atu1->p2.bit[7] = (atu1->p2.bit[7] | 1); 
+	    atu2->p2.bit[3] = atu2->p1.bit[2] = (atu2->p1.bit[2] | 1); 
+	    break; 
+   
+        case pyesl:
+	    atu1->p2.bit[5] = (atu1->p1.bit[5] | 1); 
+	    atu2->p2.bit[5] = atu1->p1.bit[4] = (atu1->p2.bit[4] | 1); 
+	    atu2->p2.bit[3] = atu2->p1.bit[2] = (atu2->p1.bit[2] | 1); 
+	    break; 
+
+        case lzeep:
+	    atu1->p2.bit[3] = atu1->p1.bit[2] = (atu1->p1.bit[2] | 1); 
+	    atu2->p1.bit[6] = atu1->p2.bit[7] = (atu1->p2.bit[7] | 1); 
+	    atu2->p2.bit[7] = (atu2->p2.bit[7] | 1); 
+	    break; 
+   
+        case lyesp:
+	    atu1->p2.bit[3] = atu1->p1.bit[2] = (atu1->p1.bit[2] | 1); 
+	    atu2->p2.bit[5] = atu1->p1.bit[4] = (atu1->p2.bit[4] | 1); 
+	    atu2->p2.bit[7] = (atu2->p2.bit[7] | 1); 
+	    break; 
+
+        case lzeel:
+	    atu1->p2.bit[3] = atu1->p1.bit[2] = (atu1->p1.bit[2] | 1); 
+	    atu2->p1.bit[6] = atu1->p2.bit[7] = (atu1->p2.bit[7] | 1); 
+	    atu2->p2.bit[3] = atu2->p1.bit[2] = (atu2->p1.bit[2] | 1); 
+	    break; 
+   
+        case lyesl:
+	    atu1->p2.bit[3] = atu1->p1.bit[2] = (atu1->p1.bit[2] | 1); 
+	    atu2->p2.bit[5] = atu1->p1.bit[4] = (atu1->p2.bit[4] | 1); 
+	    atu2->p2.bit[3] = atu2->p1.bit[2] = (atu2->p1.bit[2] | 1); 
+	    break; 
+      }
+ }
+
 int main(int argc, char** argv) {
   
   igraph_t g;
@@ -25,102 +236,22 @@ int main(int argc, char** argv) {
   int ret;
   time_t t;
   srand((unsigned) time(&t));
+  int count = 0;
 
   /* turn on attribute handling */
   igraph_i_set_attribute_table(&igraph_cattribute_table);
 
-  if(argc < 2) { 
-	printf("\nUsage: %s <dotfile>",argv[0]);
-	exit(1);
-   }
-  // l = number of levels, s = max size of each level (>=2) , conns = minimum connectivity
-  int conns=3;    
-  int l=rand()%MLEVELS+conns,s=rand()%LSIZE+conns;  
-  int loc[l];    // store start
-  double scale=1.0;
-  int count=0;
+  at_row atrow; 
+  at_unit atu1, atu2, atu3;
+  init_unit(&atu1,l);
+  init_unit(&atu2,z);
+  append_unit(&atrow,&atu1);
+  append_unit(&atrow,&atu2);
 
-  /* Randomly determine the size for every level 
- *   loc[0] = second level starting vertex and so on  */
-  for(int i=0;i<l;i++) {
-	count+= (s>conns)?(rand()%(s-conns)+conns):conns;
-	loc[i] = count;
-//	printf("%d ",loc[i]);
-  }	
- 
+
   /* empty directed graph, zero vertices */
   igraph_empty(&g, count, IGRAPH_UNDIRECTED);
   igraph_bool_t connected;
-
-  /* For every level, find the previous, current and next starting vertex */
-  for(int i=0;i<l;i++) {
-    int p = (i<=1)?0:loc[i-2];
-    int c = (i>0)?loc[i-1]:0;
-    int n = loc[i];
-
-    for (int j=c;j<n;j++)  { /* Vertices in level i */ 
-
-     /* Get the left, right and current neighbors using our method */
-     igraph_vector_t left,current,right;
-     igraph_vector_init(&left,1);
-     igraph_vector_init(&current,1);
-     igraph_vector_init(&right,1);
-     cutNeighbors(&g,j,loc,&left,&current,&right);
-//
-     /* other = does it have connections in other levels ? 
-      * conns = Get the existing connections for the vertex j */
-     igraph_bool_t other = ((i==0)?0:igraph_vector_size(&left) -1) + ((i==l-1)?0:igraph_vector_size(&right) -1);
-     int cs = igraph_vector_size(&left)-1 + igraph_vector_size(&right) -1 + igraph_vector_size(&current)-1; 
-
-     /* We start adding edges in forward and backward directions alternately making sure, there is 
-      * atleast one left or right neighbor*/
-     int dir=1;
-     while(cs<conns || !other) {
-
-    	if((i!=0) && (i==l-1 || dir==0)) 	{ 
-		int rb = rand()%(loc[i-1]-p); 
-		igraph_are_connected(&g,j, p+rb,&connected);
-//		printf("Back: i=%d,cs=%d,isconn=%d,rb=%d,size=%d\n",i, cs, connected,rb,loc[i-1]-p);
-		if(!connected)
-		     { igraph_add_edge(&g,j,p+rb); dir=1; cs++; }
-		other = 1;
-		}
-	if((i!=l-1) && (i==0 || dir==1)) 	{
-		int rf = rand()%(loc[i+1]-n); 
-		igraph_are_connected(&g,j, n+rf,&connected);
-//		printf("Forward: i=%d,cs=%d,isconn=%d,rb=%d,size=%d\n",i, cs, connected,rf,loc[i+1]-n);
-		if(!connected)
-		   { igraph_add_edge(&g,j,n+rf); dir=0; cs++; } 
-		other = 1;
-		}
-
-        /* Only after minimum requirement is satisfied, add edges in the same level,
-         * use a randomness of 1/3 */
-	int t=rand()%(3*(n-c));
-	if((cs>0) && (t < (n-c)) && (c+t!=j)) {
-            igraph_are_connected(&g,j, c+t,&connected);
-	    if(!connected)
-	      { igraph_add_edge(&g,j,c+t); cs++; } 
-	}
-    }	
-  }
-  }
-
-  /* Set the positions in .dot file */
-  double off=0.1;
-  for(int i=0;i<l;i++) {
-    int o = (i==0)?0:loc[i-1];
-    for(int j=o;j<loc[i];j++) {
-  char spos[8];
-  int low = (s-(loc[i]-o))/2;
- // SETVAS(&g, "fixedsize",j,"true");
-  sprintf(spos,"%f,%f!",i*scale-((j-o)%2)*off,(j-o+low)*scale);
-  SETVAS(&g, "pos",j,spos);
-  SETVAS(&g, "shape",j,"point");
-  SETVAN(&g, "fontsize",j,6);
-  SETVAN(&g, "xlabel",j,j);
-  }
- }
 
   /* Write g to the file specified in stdin */ 
   FILE *fp = fopen(argv[1],"w");
