@@ -35,12 +35,12 @@ typedef struct node at_row;
 void init_unit(at_unit *atu, enum strt lbl);
 void append_unit(at_row *head, at_unit *atu);
 void create_structure(at_row *atr, enum label lbl) ;
-void create_dunit(at_row *head, enum label lbl);
+void append_dunit(at_row *head, enum label lbl);
 
 void init_unit(at_unit *atu, enum strt lbl) {
 
-    atu->p1.bit[0] = (atu->p1.bit[0] | 1); 
-    atu->p2.bit[0] = (atu->p2.bit[0] | 1); 
+    atu->p1.bit[0] = 1; 
+    atu->p2.bit[0] = 1; 
 
    switch (lbl) {
 
@@ -72,13 +72,13 @@ void init_unit(at_unit *atu, enum strt lbl) {
 void append_unit(at_row *head, at_unit *atu) {
  
     at_row *node = (at_row*)malloc(sizeof(at_row*));
-    at_row *tail = head;
-    if(head == NULL) 
-       { head = node; return; }
-
-    while(tail->next!=NULL) tail=tail->next; 
     node->atu = atu;
     node->next = NULL;
+    if(head == NULL) 
+       { head = node; return; }
+    at_row *tail = head;
+
+    while(tail->next!=NULL) tail=tail->next; 
     tail->next = node;
 
     tail->atu->p1.bit[0] = atu->p1.bit[1] = (tail->atu->p1.bit[0] | atu->p1.bit[1]); 
@@ -88,72 +88,39 @@ void append_unit(at_row *head, at_unit *atu) {
     tail->atu->p2.bit[7] = atu->p1.bit[6] = (tail->atu->p1.bit[7] | atu->p2.bit[6]); 
  }
      
-void create_dunit(at_row *head, enum label lbl) {
+void append_dunit(at_row *head, enum label lbl) {
 
     at_unit *atu1 = (at_unit*)malloc(sizeof(at_unit*));
     at_unit *atu2 = (at_unit*)malloc(sizeof(at_unit*));
-    at_row *node2 = (at_row*)malloc(sizeof(at_row*));
-    node2->atu = atu2;
-    head->atu = atu1;
-    head->next = node2;
-    node2->next = NULL;
 
    switch (lbl) {
 
 	case box:
-	    init_unit(atu1,l);
-	    init_unit(atu2,l);
-	    break; 
-
+	    init_unit(atu1,l); init_unit(atu2,l);  break; 
 	case cross:
-	    init_unit(atu1,s);
-	    init_unit(atu1,z);
-	    break; 
-
+	    init_unit(atu1,s); init_unit(atu1,z);  break; 
         case pzeep:
-	    init_unit(atu1,pz);
-	    init_unit(atu2,z);
-	    break; 
-			
+	    init_unit(atu1,pz); init_unit(atu2,z); break; 
         case pyesp:
-	    init_unit(atu1,ps);
-	    init_unit(atu2,s);
-	    break; 
-			
+	    init_unit(atu1,ps); init_unit(atu2,s); break; 
         case pzeel:
-	    init_unit(atu1,pz);
-	    init_unit(atu2,l);
-	    break; 
-   
+	    init_unit(atu1,pz); init_unit(atu2,l); break; 
         case pyesl:
-	    init_unit(atu1,ps);
-	    init_unit(atu2,l);
-	    break; 
-
+	    init_unit(atu1,ps); init_unit(atu2,l); break; 
         case lzeep:
-	    init_unit(atu1,l);
-	    init_unit(atu1,z);
-	    init_unit(atu2,z);
+	    init_unit(atu1,l);  init_unit(atu1,z); init_unit(atu2,z);
 	    break; 
-   
         case lyesp:
-	    init_unit(atu1,l);
-	    init_unit(atu1,s);
-	    init_unit(atu2,s);
+	    init_unit(atu1,l); init_unit(atu1,s); init_unit(atu2,s);
 	    break; 
-
         case lzeel:
-	    init_unit(atu1,l);
-	    init_unit(atu1,z);
-	    init_unit(atu2,l);
+	    init_unit(atu1,l); init_unit(atu1,z); init_unit(atu2,l);
 	    break; 
-   
         case lyesl:
-	    init_unit(atu1,l);
-	    init_unit(atu1,s);
-	    init_unit(atu2,l);
+	    init_unit(atu1,l); init_unit(atu1,s); init_unit(atu2,l);
 	    break; 
       }
+	    append_unit(head,atu1);
 	    append_unit(head,atu2);
  }
 
@@ -232,7 +199,6 @@ void create_structure(at_row *head, enum label lbl) {
 int main(int argc, char** argv) {
   
   igraph_t g;
-  igraph_vector_t v;
   int ret;
   time_t t;
   srand((unsigned) time(&t));
@@ -241,17 +207,44 @@ int main(int argc, char** argv) {
   /* turn on attribute handling */
   igraph_i_set_attribute_table(&igraph_cattribute_table);
 
-  at_row atrow; 
+  at_row *head = NULL, *dhead = NULL; 
   at_unit atu1, atu2, atu3;
   init_unit(&atu1,l);
   init_unit(&atu2,z);
-  append_unit(&atrow,&atu1);
-  append_unit(&atrow,&atu2);
+  append_unit(head,&atu1);
+  append_unit(head,&atu2);
+  append_dunit(dhead,box);
+  append_unit(dhead,&atu2);
 
 
   /* empty directed graph, zero vertices */
-  igraph_empty(&g, count, IGRAPH_UNDIRECTED);
-  igraph_bool_t connected;
+  igraph_empty(&g, 2, IGRAPH_UNDIRECTED);
+
+  at_row *atrptr = dhead;
+  int v = 2;
+  while(atrptr!=NULL) 
+  {
+  	at_unit *ptr = atrptr->atu;
+	igraph_add_vertices(&g,2,0);
+	/*Draw backwards*/
+	if(ptr->p1.bit[1]==1) igraph_add_edge(&g,v,v-2);
+	if(ptr->p1.bit[2]==1) igraph_add_edge(&g,v,v+1);
+	if(ptr->p1.bit[7]==1) igraph_add_edge(&g,v,v-1);
+	if(ptr->p2.bit[5]==1) igraph_add_edge(&g,v+1,v-2);
+	if(ptr->p2.bit[1]==1) igraph_add_edge(&g,v,v-2);
+  
+	if(atrptr->next==NULL) {
+	   igraph_add_vertices(&g,2,0);
+	   if(ptr->p1.bit[0]==1) igraph_add_edge(&g,v,v+2);
+	   if(ptr->p1.bit[4]==1) igraph_add_edge(&g,v,v+3);
+	   if(ptr->p2.bit[6]==1) igraph_add_edge(&g,v+1,v+2);
+	   if(ptr->p2.bit[0]==1) igraph_add_edge(&g,v,v+2);
+	}
+
+	v=v+2;
+
+  }
+     
 
   /* Write g to the file specified in stdin */ 
   FILE *fp = fopen(argv[1],"w");
