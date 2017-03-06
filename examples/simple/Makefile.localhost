@@ -15,7 +15,7 @@ CFLAGS=-g
 OBJ_DIR=.
 SRC_DIR=.
 
-all : clean igraph_atfree igraph_atdegseqgen igraph_dprandomgen igraph_reg_atgen igraph_atrandomgen igraph_atfree igraph_atread igraph_atgen igraph_dpread 
+all : clean igraph_atfree igraph_atdegseqgen igraph_dprandomgen igraph_reg_atgen igraph_atrandomgen igraph_atfree igraph_atread igraph_atgen igraph_dpread igraph_test
 
 alll :
 	for file in *.c ; do \
