@@ -914,6 +914,7 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 
     if(depth==0) {
       	printf("\n\nAfter adjusting for need:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
+      	printf("\n[%s]|%36s  0/1/2  0/1/2  ",gname," ");
      for(int i=0;i<dia+1;i++)
       printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
      printf("\nPaths=%d",paths);
@@ -938,6 +939,7 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
       
      if(depth==0) {	
 	printf("\n\nAfter exchanging with neighbors and left extension:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
+      	printf("\n[%s]|%36s  0/1/2  0/1/2  ",gname," ");
      for(int i=0;i<dia+1;i++)
       printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
      printf("\nPaths=%d",paths);
@@ -952,6 +954,7 @@ int minPaths(igraph_t* g, char *gname, int depth, igraph_vector_t *Y) {
 
       if(depth==0) {	
       	printf("\n\nAfter right extension:\n[%s]|%s Level [minc,maxc] needc extra contr InDeg   OutDeg  ",gname,depthstring);
+      	printf("\n[%s]|%36s  0/1/2  0/1/2  ",gname," ");
      for(int i=0;i<dia+1;i++)
       printf("\n[%s]|%s%5d| [%3d,%3d]  %5d %5d %5d %2d/%d/%d %2d/%d/%d",gname,depthstring,i,minc[i],maxc[i],needc[i],extra[i],contr[i],noInDeg[i],oneInDeg[i],twoInDeg[i],noOutDeg[i],oneOutDeg[i],twoOutDeg[i]);
      printf("\nPaths=%d",paths);
